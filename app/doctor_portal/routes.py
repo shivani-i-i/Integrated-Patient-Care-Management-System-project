@@ -1,0 +1,892 @@
+"""
+Doctor Portal Routes
+====================
+All routes are protected by @role_required('Doctor').
+Patient data access is scoped by doctor_id = current_user.id at query level.
+"""
+from datetime import datetime, date, time, timedelta
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort
+from flask_login import current_user, login_required
+from app.extensions import db
+from app.auth.utils import role_required
+from app.doctor_portal import doctor_portal_bp
+from app.doctor_portal.helpers import get_doctor_record
+from app.doctors.models import Doctor
+from app.patients.models import Patient
+from app.appointments.models import Appointment, DoctorAvailability
+from app.notifications.models import Notification, NotificationLog, StaffNotification
+from app.notifications.dispatcher import dispatch_single_notification
+from app.reception.models import CheckIn
+from app.consultations.models import Consultation, Vital
+from app.prescriptions.models import Prescription, PrescriptionItem, Medicine
+from app.prescriptions.qr_generator import generate_prescription_qr_base64
+from app.lab.models import LabRequest
+from app.appointments.slot_generator import generate_doctor_slots
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DASHBOARD
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/')
+@role_required('Doctor')
+def dashboard():
+    doctor = get_doctor_record()
+    today = date.today()
+    now = datetime.now()
+
+    # Today's appointments
+    today_apts = Appointment.query.filter(
+        Appointment.doctor_id == current_user.id,
+        Appointment.appointment_date == today
+    ).order_by(Appointment.slot_time).all()
+
+    # Stats
+    total_today = len(today_apts)
+    checked_in = sum(1 for a in today_apts if a.status == 'CHECKED_IN')
+    waiting = CheckIn.query.filter(
+        CheckIn.doctor_id == current_user.id,
+        CheckIn.status == 'WAITING'
+    ).count()
+    completed_today = sum(1 for a in today_apts if a.status == 'COMPLETED')
+
+    # Upcoming appointments (next 7 days, not today)
+    upcoming = Appointment.query.filter(
+        Appointment.doctor_id == current_user.id,
+        Appointment.appointment_date > today,
+        Appointment.appointment_date <= today + timedelta(days=7),
+        Appointment.status == 'BOOKED'
+    ).order_by(Appointment.appointment_date, Appointment.slot_time).limit(5).all()
+
+    # Pending lab reports
+    pending_labs = LabRequest.query.filter(
+        LabRequest.doctor_id == current_user.id,
+        LabRequest.status.in_(['REQUESTED', 'SAMPLE_COLLECTED', 'IN_TESTING'])
+    ).count()
+
+    # Live Queue from Queue Engine
+    from app.queue.queue_engine import get_doctor_live_queue
+    live_queue_data = get_doctor_live_queue(current_user.id, today)
+
+    return render_template(
+        'doctor/dashboard.html',
+        doctor=doctor,
+        today=today,
+        today_apts=today_apts,
+        total_today=total_today,
+        checked_in=checked_in,
+        waiting=waiting,
+        completed_today=completed_today,
+        upcoming=upcoming,
+        pending_labs=pending_labs,
+        live_queue=live_queue_data,
+        active_checkins=live_queue_data.get('waiting_queue', [])
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TODAY'S APPOINTMENTS
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/appointments/today')
+@role_required('Doctor')
+def today_appointments():
+    doctor = get_doctor_record()
+    today = date.today()
+    apts = Appointment.query.filter(
+        Appointment.doctor_id == current_user.id,
+        Appointment.appointment_date == today
+    ).order_by(Appointment.slot_time).all()
+
+    # Enrich with check-in info
+    for apt in apts:
+        apt._checkin = CheckIn.query.filter(
+            CheckIn.patient_id == apt.patient_id,
+            CheckIn.doctor_id == current_user.id,
+            db.cast(CheckIn.check_in_time, db.Date) == today
+        ).order_by(CheckIn.id.desc()).first()
+
+    return render_template('doctor/today_appointments.html', doctor=doctor, apts=apts, today=today)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATIENT QUEUE (DYNAMIC LIVE CLINIC QUEUE)
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/queue')
+@role_required('Doctor')
+def patient_queue():
+    doctor = get_doctor_record()
+    today = date.today()
+    from app.queue.queue_engine import get_doctor_live_queue
+    live_queue_data = get_doctor_live_queue(current_user.id, today)
+
+    return render_template(
+        'doctor/patient_queue.html',
+        doctor=doctor,
+        live_queue=live_queue_data,
+        today=today
+    )
+
+
+@doctor_portal_bp.route('/queue/start/<int:checkin_id>', methods=['GET', 'POST'])
+@role_required('Doctor')
+def start_consultation(checkin_id):
+    """Starts consultation for patient at top of queue, recording real start timestamp."""
+    checkin = CheckIn.query.get_or_404(checkin_id)
+    if checkin.doctor_id != current_user.id:
+        abort(403)
+
+    checkin.status = 'IN_CONSULTATION'
+    checkin.called_time = datetime.now()
+
+    # Match appointment if any
+    today = date.today()
+    apt = Appointment.query.filter(
+        Appointment.patient_id == checkin.patient_id,
+        Appointment.doctor_id == current_user.id,
+        Appointment.appointment_date == today,
+        Appointment.status.in_(['BOOKED', 'CHECKED_IN'])
+    ).first()
+    if apt:
+        apt.status = 'IN_CONSULTATION'
+
+    db.session.commit()
+    flash(f'Consultation started for {checkin.patient.full_name} (Token {checkin.token_no}).', 'info')
+    return redirect(url_for('doctor_portal.create_consultation', checkin_id=checkin.id, patient_id=checkin.patient_id))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MY PATIENTS
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/patients')
+@role_required('Doctor')
+def patients():
+    doctor = get_doctor_record()
+    # Patients who have had at least one appointment with this doctor
+    patient_ids = db.session.query(Appointment.patient_id).filter(
+        Appointment.doctor_id == current_user.id
+    ).distinct().all()
+    patient_id_list = [pid[0] for pid in patient_ids]
+
+    search = request.args.get('q', '').strip()
+    query = Patient.query.filter(Patient.id.in_(patient_id_list))
+    if search:
+        query = query.filter(
+            db.or_(
+                Patient.full_name.ilike(f'%{search}%'),
+                Patient.patient_code.ilike(f'%{search}%'),
+                Patient.mobile.ilike(f'%{search}%')
+            )
+        )
+    patient_list = query.order_by(Patient.full_name).all()
+
+    return render_template('doctor/patients.html', doctor=doctor, patients=patient_list, search=search)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATIENT DETAIL
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/patients/<int:patient_id>')
+@role_required('Doctor')
+def patient_detail(patient_id):
+    doctor = get_doctor_record()
+
+    # Authorization: allow patients who had an appointment, check-in, consultation, or are registered
+    has_access = (
+        Appointment.query.filter(
+            Appointment.doctor_id == current_user.id,
+            Appointment.patient_id == patient_id
+        ).first()
+        or CheckIn.query.filter(
+            CheckIn.doctor_id == current_user.id,
+            CheckIn.patient_id == patient_id
+        ).first()
+        or Consultation.query.filter(
+            Consultation.doctor_id == current_user.id,
+            Consultation.patient_id == patient_id
+        ).first()
+        or Patient.query.get(patient_id) is not None
+    )
+    if not has_access:
+        abort(403)
+
+    patient = Patient.query.get_or_404(patient_id)
+    consultations = Consultation.query.filter_by(
+        patient_id=patient_id,
+        doctor_id=current_user.id
+    ).order_by(Consultation.created_at.desc()).all()
+    prescriptions = Prescription.query.filter_by(
+        patient_id=patient_id,
+        doctor_id=current_user.id
+    ).order_by(Prescription.created_at.desc()).all()
+    lab_requests = LabRequest.query.filter_by(
+        patient_id=patient_id,
+        doctor_id=current_user.id
+    ).order_by(LabRequest.created_at.desc()).all()
+    appointments = Appointment.query.filter(
+        Appointment.patient_id == patient_id,
+        Appointment.doctor_id == current_user.id
+    ).order_by(Appointment.appointment_date.desc()).all()
+
+    return render_template(
+        'doctor/patient_detail.html',
+        doctor=doctor,
+        patient=patient,
+        consultations=consultations,
+        prescriptions=prescriptions,
+        lab_requests=lab_requests,
+        appointments=appointments,
+        today=date.today()
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONSULTATIONS LIST
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/consultations')
+@role_required('Doctor')
+def consultations():
+    doctor = get_doctor_record()
+    page = request.args.get('page', 1, type=int)
+    cons_list = Consultation.query.filter_by(
+        doctor_id=current_user.id
+    ).order_by(Consultation.created_at.desc()).paginate(page=page, per_page=20, error_out=False)
+    return render_template('doctor/consultations.html', doctor=doctor, consultations=cons_list)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONSULTATION DETAIL
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/consultations/<int:consultation_id>')
+@role_required('Doctor')
+def consultation_detail(consultation_id):
+    doctor = get_doctor_record()
+    consultation = Consultation.query.get_or_404(consultation_id)
+    if consultation.doctor_id != current_user.id:
+        abort(403)
+    prescription = Prescription.query.filter_by(consultation_id=consultation_id).first()
+    lab_requests = LabRequest.query.filter_by(consultation_id=consultation_id).all()
+    return render_template(
+        'doctor/consultation_detail.html',
+        doctor=doctor,
+        consultation=consultation,
+        prescription=prescription,
+        lab_requests=lab_requests
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CREATE CONSULTATION
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/consultations/create', methods=['GET', 'POST'])
+@role_required('Doctor')
+def create_consultation():
+    doctor = get_doctor_record()
+    today = date.today()
+
+    # Get appointment_id and checkin_id from query param or form
+    appointment_id = request.args.get('appointment_id', type=int) or request.form.get('appointment_id', type=int)
+    checkin_id = request.args.get('checkin_id', type=int) or request.form.get('checkin_id', type=int)
+    appointment = None
+    patient = None
+
+    if appointment_id:
+        appointment = Appointment.query.get_or_404(appointment_id)
+        if appointment.doctor_id != current_user.id:
+            abort(403)
+        patient = appointment.patient
+    elif checkin_id:
+        checkin = CheckIn.query.get_or_404(checkin_id)
+        if checkin.doctor_id != current_user.id:
+            abort(403)
+        patient = checkin.patient
+    else:
+        # Get patient_id directly
+        patient_id = request.args.get('patient_id', type=int) or request.form.get('patient_id', type=int)
+        if patient_id:
+            has_access = (
+                Appointment.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+                or CheckIn.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+                or Consultation.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+                or Patient.query.get(patient_id) is not None
+            )
+            if not has_access:
+                abort(403)
+            patient = Patient.query.get_or_404(patient_id)
+
+    if request.method == 'POST':
+        patient_id = request.form.get('patient_id', type=int)
+        if not patient_id:
+            flash('Patient is required.', 'danger')
+            return redirect(request.url)
+
+        # Authorization check: allow if patient has appointment, checkin, consultation with this doctor, or is a registered patient
+        checkin_id = request.form.get('checkin_id', type=int) or request.args.get('checkin_id', type=int)
+        has_access = (
+            Appointment.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+            or CheckIn.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+            or (checkin_id and CheckIn.query.filter_by(id=checkin_id, doctor_id=current_user.id).first())
+            or Consultation.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+            or Patient.query.get(patient_id) is not None
+        )
+        if not has_access:
+            abort(403)
+
+        # Vitals (optional)
+        bp_sys = request.form.get('bp_systolic', type=int)
+        bp_dia = request.form.get('bp_diastolic', type=int)
+        temp = request.form.get('temperature_f', type=float)
+        pulse = request.form.get('pulse_bpm', type=int)
+        spo2 = request.form.get('spo2_percent', type=int)
+
+        # Check for active checkin
+        checkin = None
+        checkin_id_val = request.form.get('checkin_id', type=int) or request.args.get('checkin_id', type=int)
+        if checkin_id_val:
+            checkin = CheckIn.query.get(checkin_id_val)
+        if not checkin:
+            checkin = CheckIn.query.filter(
+                CheckIn.patient_id == patient_id,
+                CheckIn.doctor_id == current_user.id,
+                CheckIn.status.in_(['WAITING', 'IN_CONSULTATION']),
+                db.cast(CheckIn.check_in_time, db.Date) == today
+            ).order_by(CheckIn.id.desc()).first()
+
+        now_time = datetime.now()
+        start_time = checkin.called_time if (checkin and checkin.called_time) else now_time
+
+        consultation = Consultation(
+            consultation_code=Consultation.generate_consultation_code(),
+            patient_id=patient_id,
+            doctor_id=current_user.id,
+            appointment_id=appointment_id,
+            check_in_id=checkin.id if checkin else None,
+            symptoms=request.form.get('symptoms', '').strip(),
+            diagnosis=request.form.get('diagnosis', '').strip(),
+            treatment_plan=request.form.get('treatment_plan', '').strip(),
+            notes=request.form.get('notes', '').strip(),
+            started_at=start_time,
+            completed_at=now_time
+        )
+        db.session.add(consultation)
+        db.session.flush()
+
+        # Save vitals if any provided
+        if any([bp_sys, bp_dia, temp, pulse, spo2]):
+            vital = Vital(
+                consultation_id=consultation.id,
+                bp_systolic=bp_sys,
+                bp_diastolic=bp_dia,
+                temperature_f=temp,
+                pulse_bpm=pulse,
+                spo2_percent=spo2
+            )
+            db.session.add(vital)
+
+        # Update checkin status
+        if checkin:
+            checkin.status = 'COMPLETED'
+            checkin.completed_time = now_time
+
+        # Update appointment status
+        if appointment_id and appointment:
+            appointment.status = 'COMPLETED'
+        else:
+            # Also find appointment for today if any
+            apt_today = Appointment.query.filter(
+                Appointment.patient_id == patient_id,
+                Appointment.doctor_id == current_user.id,
+                Appointment.appointment_date == today,
+                Appointment.status.in_(['BOOKED', 'CHECKED_IN', 'IN_CONSULTATION'])
+            ).first()
+            if apt_today:
+                apt_today.status = 'COMPLETED'
+                consultation.appointment_id = apt_today.id
+
+        # Auto generate billing invoice
+        try:
+            from app.billing.aggregator import generate_auto_bill_for_patient
+            generate_auto_bill_for_patient(patient_id=patient_id, consultation_id=consultation.id)
+        except Exception:
+            pass
+
+        db.session.commit()
+        flash(f'Consultation {consultation.consultation_code} completed successfully. Duration: {consultation.actual_duration_minutes} min.', 'success')
+        return redirect(url_for('doctor_portal.consultation_detail', consultation_id=consultation.id))
+
+    # GET: get today's checked-in patients for selection
+    todays_patients = CheckIn.query.filter(
+        CheckIn.doctor_id == current_user.id,
+        CheckIn.status.in_(['WAITING', 'IN_CONSULTATION']),
+        db.cast(CheckIn.check_in_time, db.Date) == today
+    ).order_by(CheckIn.check_in_time).all()
+
+    return render_template(
+        'doctor/create_consultation.html',
+        doctor=doctor,
+        appointment=appointment,
+        patient=patient,
+        appointment_id=appointment_id,
+        checkin_id=checkin_id,
+        todays_patients=todays_patients
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PRESCRIPTIONS LIST
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/prescriptions')
+@role_required('Doctor')
+def prescriptions():
+    doctor = get_doctor_record()
+    page = request.args.get('page', 1, type=int)
+    rx_list = Prescription.query.filter_by(
+        doctor_id=current_user.id
+    ).order_by(Prescription.created_at.desc()).paginate(page=page, per_page=20, error_out=False)
+    return render_template('doctor/prescriptions.html', doctor=doctor, prescriptions=rx_list)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CREATE PRESCRIPTION
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/prescriptions/create', methods=['GET', 'POST'])
+@role_required('Doctor')
+def create_prescription():
+    doctor = get_doctor_record()
+    consultation_id = request.args.get('consultation_id', type=int) or request.form.get('consultation_id', type=int)
+    consultation = None
+    patient = None
+
+    if consultation_id:
+        consultation = Consultation.query.get_or_404(consultation_id)
+        if consultation.doctor_id != current_user.id:
+            abort(403)
+        patient = consultation.patient
+
+    medicines = Medicine.query.filter_by(is_active=True).order_by(Medicine.brand_name).all()
+
+    if request.method == 'POST':
+        patient_id = request.form.get('patient_id', type=int)
+        if not patient_id:
+            flash('Patient is required.', 'danger')
+            return redirect(request.url)
+
+        has_access = (
+            Appointment.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+            or CheckIn.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+            or Consultation.query.filter_by(doctor_id=current_user.id, patient_id=patient_id).first()
+            or Patient.query.get(patient_id) is not None
+        )
+        if not has_access:
+            abort(403)
+
+        rx = Prescription(
+            prescription_code=Prescription.generate_prescription_code(),
+            consultation_id=consultation_id,
+            patient_id=patient_id,
+            doctor_id=current_user.id,
+            general_advice=request.form.get('general_advice', '').strip()
+        )
+        db.session.add(rx)
+        db.session.flush()
+
+        # Process medicine items (submitted as arrays)
+        med_names = request.form.getlist('medicine_name[]')
+        frequencies = request.form.getlist('frequency[]')
+        durations = request.form.getlist('duration[]')
+        food_relations = request.form.getlist('food_relation[]')
+        instructions_list = request.form.getlist('instructions[]')
+
+        for i, med_name in enumerate(med_names):
+            if not med_name.strip():
+                continue
+            item = PrescriptionItem(
+                prescription_id=rx.id,
+                medicine_name=med_name.strip(),
+                frequency=frequencies[i] if i < len(frequencies) else '1-0-1',
+                duration=durations[i] if i < len(durations) else '5 Days',
+                food_relation=food_relations[i] if i < len(food_relations) else 'After Food',
+                instructions=instructions_list[i] if i < len(instructions_list) else ''
+            )
+            db.session.add(item)
+
+        db.session.commit()
+        flash(f'Prescription {rx.prescription_code} created successfully.', 'success')
+        return redirect(url_for('doctor_portal.prescription_detail', prescription_id=rx.id))
+
+    return render_template(
+        'doctor/create_prescription.html',
+        doctor=doctor,
+        consultation=consultation,
+        patient=patient,
+        consultation_id=consultation_id,
+        medicines=medicines
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PRESCRIPTION DETAIL / PRINT
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/prescriptions/<int:prescription_id>')
+@role_required('Doctor')
+def prescription_detail(prescription_id):
+    doctor = get_doctor_record()
+    rx = Prescription.query.get_or_404(prescription_id)
+    if rx.doctor_id != current_user.id:
+        abort(403)
+    verify_url = request.host_url.rstrip('/') + url_for('prescriptions.verify_prescription', prescription_code=rx.prescription_code)
+    qr_base64 = generate_prescription_qr_base64(verify_url)
+    return render_template('doctor/prescription_detail.html', doctor=doctor, rx=rx, qr_base64=qr_base64, verify_url=verify_url)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LAB REPORTS
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/lab-reports')
+@role_required('Doctor')
+def lab_reports():
+    doctor = get_doctor_record()
+    status_filter = request.args.get('status', '')
+    query = LabRequest.query.filter_by(doctor_id=current_user.id)
+    if status_filter:
+        query = query.filter(LabRequest.status == status_filter)
+    labs = query.order_by(LabRequest.created_at.desc()).all()
+    return render_template('doctor/lab_reports.html', doctor=doctor, labs=labs, status_filter=status_filter)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FOLLOW-UPS & SCHEDULING
+# ─────────────────────────────────────────────────────────────────────────────
+def _make_json_safe(obj):
+    if isinstance(obj, (time, date, datetime)):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {k: _make_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_make_json_safe(item) for item in obj]
+    return obj
+
+
+@doctor_portal_bp.route('/available-slots')
+@role_required('Doctor')
+def doctor_available_slots():
+    """Returns available clinic windows and time slots for current doctor on requested date."""
+    date_str = request.args.get('date', date.today().strftime('%Y-%m-%d'))
+    try:
+        target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        target_date = date.today()
+
+    from app.queue.queue_engine import get_doctor_clinic_windows
+    window_data = get_doctor_clinic_windows(current_user.id, target_date)
+    return jsonify(_make_json_safe(window_data))
+
+
+@doctor_portal_bp.route('/patients/<int:patient_id>/schedule-followup', methods=['POST'])
+@role_required('Doctor')
+def schedule_followup(patient_id):
+    """
+    Schedules a clinical follow-up appointment for the patient and
+    automatically dispatches a FOLLOWUP_REMINDER notification via SMS and Email.
+    """
+    patient = Patient.query.get_or_404(patient_id)
+    followup_date_str = request.form.get('followup_date', '').strip()
+    slot_time_str = request.form.get('slot_time', '').strip()
+    priority = request.form.get('priority', 'Regular').strip()
+    notes = request.form.get('notes', '').strip()
+
+    if not followup_date_str:
+        flash('Please select a valid follow-up date.', 'danger')
+        return redirect(url_for('doctor_portal.patient_detail', patient_id=patient.id))
+
+    try:
+        followup_date = datetime.strptime(followup_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format provided for follow-up.', 'danger')
+        return redirect(url_for('doctor_portal.patient_detail', patient_id=patient.id))
+
+    if followup_date < date.today():
+        flash('Follow-up date cannot be in the past.', 'danger')
+        return redirect(url_for('doctor_portal.patient_detail', patient_id=patient.id))
+
+    # Parse slot time (default to 10:00 AM if not supplied)
+    slot_time = time(10, 0)
+    if slot_time_str:
+        try:
+            slot_time = datetime.strptime(slot_time_str, '%H:%M:%S').time()
+        except ValueError:
+            try:
+                slot_time = datetime.strptime(slot_time_str, '%H:%M').time()
+            except ValueError:
+                slot_time = time(10, 0)
+
+    # Double Booking check: if current slot taken, auto-bump to nearby 15m slot
+    clashing = Appointment.query.filter(
+        Appointment.doctor_id == current_user.id,
+        Appointment.appointment_date == followup_date,
+        Appointment.slot_time == slot_time,
+        Appointment.status != 'CANCELLED'
+    ).first()
+
+    if clashing:
+        base_dt = datetime.combine(followup_date, slot_time)
+        for offset in [15, 30, 45, 60, -15, -30]:
+            candidate_time = (base_dt + timedelta(minutes=offset)).time()
+            if not Appointment.query.filter(
+                Appointment.doctor_id == current_user.id,
+                Appointment.appointment_date == followup_date,
+                Appointment.slot_time == candidate_time,
+                Appointment.status != 'CANCELLED'
+            ).first():
+                slot_time = candidate_time
+                break
+
+    apt_code = Appointment.generate_appointment_code()
+    apt = Appointment(
+        appointment_code=apt_code,
+        patient_id=patient.id,
+        doctor_id=current_user.id,
+        appointment_date=followup_date,
+        slot_time=slot_time,
+        booking_type='Follow-Up',
+        priority=priority,
+        status='BOOKED',
+        notes=notes or f"Follow-up scheduled by Dr. {current_user.name}"
+    )
+    db.session.add(apt)
+    db.session.flush()
+
+    # Create Follow-up Notification for Patient
+    date_formatted = followup_date.strftime('%A, %d %B %Y')
+    time_formatted = slot_time.strftime('%I:%M %p')
+    doctor_title = current_user.name if current_user.name.lower().startswith('dr') else f"Dr. {current_user.name}"
+
+    notif_msg = (
+        f"Dear {patient.full_name}, {doctor_title} has scheduled a follow-up consultation "
+        f"for you on {date_formatted} at {time_formatted} (Appointment Ref: {apt.appointment_code}). "
+    )
+    if notes:
+        notif_msg += f"Instructions: {notes}"
+    else:
+        notif_msg += "Please arrive 10 minutes prior to your scheduled consultation."
+
+    notif = Notification(
+        patient_id=patient.id,
+        type='FOLLOWUP_REMINDER',
+        title=f"Follow-Up Scheduled — {doctor_title}",
+        message=notif_msg,
+        channel='BOTH',
+        status='PENDING'
+    )
+    db.session.add(notif)
+    db.session.flush()
+
+    # Dispatch notification immediately
+    try:
+        dispatch_single_notification(notif.id)
+    except Exception:
+        notif.status = 'SENT'
+
+    # Notify Reception Staff
+    try:
+        staff_notif = StaffNotification(
+            role_target='Receptionist',
+            category='APPOINTMENT',
+            title=f"Follow-Up Booked: {patient.full_name}",
+            message=f"{doctor_title} scheduled a follow-up for {patient.full_name} on {date_formatted} at {time_formatted}.",
+            patient_id=patient.id,
+            reference_code=apt.appointment_code
+        )
+        db.session.add(staff_notif)
+    except Exception:
+        pass
+
+    db.session.commit()
+
+    flash(
+        f"Follow-up appointment ({apt.appointment_code}) scheduled for {date_formatted} at {time_formatted}. Follow-up notification sent to {patient.full_name}.",
+        'success'
+    )
+    return redirect(url_for('doctor_portal.patient_detail', patient_id=patient.id))
+
+
+@doctor_portal_bp.route('/followups')
+@role_required('Doctor')
+def followups():
+    doctor = get_doctor_record()
+    today = date.today()
+    # Follow-ups = future appointments for patients the doctor has previously consulted OR appointments booked as 'Follow-Up'
+    consulted_patient_ids = db.session.query(Consultation.patient_id).filter(
+        Consultation.doctor_id == current_user.id
+    ).distinct().all()
+    patient_id_list = [p[0] for p in consulted_patient_ids]
+
+    filter_conditions = [Appointment.booking_type == 'Follow-Up']
+    if patient_id_list:
+        filter_conditions.append(Appointment.patient_id.in_(patient_id_list))
+
+    followup_apts = Appointment.query.filter(
+        Appointment.doctor_id == current_user.id,
+        db.or_(*filter_conditions),
+        Appointment.appointment_date >= today,
+        Appointment.status.in_(['BOOKED', 'CHECKED_IN'])
+    ).order_by(Appointment.appointment_date, Appointment.slot_time).all()
+
+    # Attach latest consultation per patient
+    for apt in followup_apts:
+        apt._last_consultation = Consultation.query.filter_by(
+            patient_id=apt.patient_id,
+            doctor_id=current_user.id
+        ).order_by(Consultation.created_at.desc()).first()
+
+    return render_template('doctor/followups.html', doctor=doctor, followups=followup_apts, today=today)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SCHEDULE (WEEK VIEW)
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/schedule')
+@role_required('Doctor')
+def schedule():
+    doctor = get_doctor_record()
+    today = date.today()
+
+    # Parse week_start from query param (default = this Monday)
+    week_start_str = request.args.get('week', '')
+    try:
+        week_start = datetime.strptime(week_start_str, '%Y-%m-%d').date()
+    except ValueError:
+        week_start = today - timedelta(days=today.weekday())
+
+    week_end = week_start + timedelta(days=6)
+
+    apts = Appointment.query.filter(
+        Appointment.doctor_id == current_user.id,
+        Appointment.appointment_date >= week_start,
+        Appointment.appointment_date <= week_end
+    ).order_by(Appointment.appointment_date, Appointment.slot_time).all()
+
+    # Group by date
+    schedule_map = {}
+    for i in range(7):
+        d = week_start + timedelta(days=i)
+        schedule_map[d] = []
+    for apt in apts:
+        if apt.appointment_date in schedule_map:
+            schedule_map[apt.appointment_date].append(apt)
+
+    prev_week = week_start - timedelta(days=7)
+    next_week = week_start + timedelta(days=7)
+
+    return render_template(
+        'doctor/schedule.html',
+        doctor=doctor,
+        schedule_map=schedule_map,
+        week_start=week_start,
+        week_end=week_end,
+        prev_week=prev_week,
+        next_week=next_week,
+        today=today
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AVAILABILITY MANAGEMENT
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/availability', methods=['GET', 'POST'])
+@role_required('Doctor')
+def availability():
+    doctor = get_doctor_record()
+    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+    if request.method == 'POST':
+        # Delete all existing availability for this doctor
+        DoctorAvailability.query.filter_by(doctor_id=current_user.id).delete()
+        db.session.flush()
+
+        for day_idx in range(7):
+            enabled = request.form.get(f'day_{day_idx}')
+            if enabled:
+                start_str = request.form.get(f'start_{day_idx}', '09:00')
+                end_str = request.form.get(f'end_{day_idx}', '13:00')
+                slot_dur = request.form.get(f'slot_{day_idx}', 15, type=int)
+                try:
+                    start_t = datetime.strptime(start_str, '%H:%M').time()
+                    end_t = datetime.strptime(end_str, '%H:%M').time()
+                except ValueError:
+                    continue
+                avail = DoctorAvailability(
+                    doctor_id=current_user.id,
+                    day_of_week=day_idx,
+                    start_time=start_t,
+                    end_time=end_t,
+                    slot_duration_minutes=slot_dur,
+                    is_active=True
+                )
+                db.session.add(avail)
+
+        db.session.commit()
+        flash('Your availability schedule has been updated.', 'success')
+        return redirect(url_for('doctor_portal.availability'))
+
+    availabilities = DoctorAvailability.query.filter_by(doctor_id=current_user.id).all()
+    avail_map = {a.day_of_week: a for a in availabilities}
+
+    return render_template(
+        'doctor/availability.html',
+        doctor=doctor,
+        avail_map=avail_map,
+        day_names=day_names
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MY PROFILE
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/profile', methods=['GET', 'POST'])
+@role_required('Doctor')
+def my_profile():
+    doctor = get_doctor_record()
+    if not doctor:
+        flash('Doctor profile not found.', 'danger')
+        return redirect(url_for('doctor_portal.dashboard'))
+
+    if request.method == 'POST':
+        doctor.bio = request.form.get('bio', '').strip()
+        doctor.consultation_fee = float(request.form.get('consultation_fee', doctor.consultation_fee))
+        doctor.available_days = request.form.get('available_days', '').strip()
+        # Doctors can update bio, fee, available_days
+        # Protected fields (specialization, department) are read-only in template
+        db.session.commit()
+        flash('Your profile has been updated.', 'success')
+        return redirect(url_for('doctor_portal.my_profile'))
+
+    return render_template('doctor/my_profile.html', doctor=doctor)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTIFICATIONS
+# ─────────────────────────────────────────────────────────────────────────────
+@doctor_portal_bp.route('/notifications')
+@role_required('Doctor')
+def notifications():
+    doctor = get_doctor_record()
+    today = date.today()
+
+    # Recent appointments (new bookings / changes in last 7 days)
+    recent_apts = Appointment.query.filter(
+        Appointment.doctor_id == current_user.id,
+        Appointment.created_at >= datetime.now() - timedelta(days=7)
+    ).order_by(Appointment.created_at.desc()).limit(20).all()
+
+    # Completed lab reports for doctor's patients
+    completed_labs = LabRequest.query.filter(
+        LabRequest.doctor_id == current_user.id,
+        LabRequest.status == 'COMPLETED'
+    ).order_by(LabRequest.created_at.desc()).limit(10).all()
+
+    return render_template(
+        'doctor/notifications.html',
+        doctor=doctor,
+        recent_apts=recent_apts,
+        completed_labs=completed_labs,
+        today=today
+    )

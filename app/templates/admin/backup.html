@@ -1,0 +1,92 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}System Backup & Disaster Recovery — CareHub Admin{% endblock %}
+{% block header_title %}System Backup & Disaster Recovery{% endblock %}
+{% block header_subtitle %}Generate instant database snapshots, download backups, and manage cold storage recovery{% endblock %}
+
+{% block admin_content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="admin-card">
+      <div class="admin-card-header flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="kpi-icon-wrapper kpi-icon-amber" style="width: 44px; height: 44px; font-size: 1.25rem;">
+            <i class="bi bi-database-fill-down"></i>
+          </div>
+          <div>
+            <h3 class="admin-card-title mb-0">Database Snapshot Archives</h3>
+            <p class="text-muted small mb-0">{{ backup_files|length }} backup snapshots currently preserved on server storage</p>
+          </div>
+        </div>
+
+        <form action="{{ url_for('admin.trigger_backup') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" style="background-color: var(--admin-blue-primary); border-color: var(--admin-blue-primary);">
+            <i class="bi bi-cloud-arrow-down-fill"></i> Trigger Instant Backup
+          </button>
+        </form>
+      </div>
+
+      <div class="table-responsive mt-3">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Snapshot Filename</th>
+              <th>Created Timestamp</th>
+              <th>File Size</th>
+              <th class="text-end pe-3">Download</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in backup_files %}
+            <tr>
+              <td class="ps-3 font-monospace small fw-bold text-slate-900">{{ b.filename }}</td>
+              <td class="text-muted small">{{ b.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td><span class="badge bg-light text-dark border">{{ b.size_kb }} KB</span></td>
+              <td class="text-end pe-3">
+                <a href="{{ url_for('admin.download_backup', filename=b.filename) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-semibold small">
+                  <i class="bi bi-download me-1"></i> Download
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">No backup snapshots generated yet. Click "Trigger Instant Backup" above.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h3 class="admin-card-title"><i class="bi bi-shield-shaded text-success"></i> Backup Protocol</h3>
+      </div>
+      <div class="p-3">
+        <div class="p-3 rounded-3 bg-light border mb-3">
+          <div class="d-flex align-items-center gap-2 text-success fw-bold mb-2">
+            <i class="bi bi-check-circle-fill"></i> Automated Daily Rotation
+          </div>
+          <p class="text-muted small mb-0">Nightly snapshots are saved to the isolated backup repository. Backups include full database relations, audit logs, and medical records.</p>
+        </div>
+
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted small">Storage Location:</span>
+          <span class="font-monospace small">/backups/</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted small">Engine:</span>
+          <span class="fw-bold small">JSON / SQL Dump</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted small">Integrity Check:</span>
+          <span class="badge bg-success">Verified</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

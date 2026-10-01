@@ -1,0 +1,91 @@
+{% extends 'reception/base_reception.html' %}
+
+{% block title %}Patient Check-In & Token — CareHub Desk{% endblock %}
+{% block header_title %}Patient Check-In & Token Issuing{% endblock %}
+{% block header_subtitle %}Assign consulting doctor, department, and priority tier for today's OPD consultation{% endblock %}
+
+{% block reception_content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <a href="{{ url_for('reception.dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">
+        <i class="bi bi-arrow-left me-1"></i> Return to Front Desk
+      </a>
+      <span class="badge bg-light text-muted border font-monospace">Check-In Desk</span>
+    </div>
+
+    {% if patient %}
+    <!-- Selected Patient Card -->
+    <div class="user-summary-card mb-4" style="cursor: default;">
+      <div class="user-avatar-initial" style="width: 48px; height: 48px; font-size: 1.1rem; background: #EFF6FF; color: #2563EB;">
+        {{ patient.first_name[0] }}{{ patient.last_name[0] }}
+      </div>
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-dark font-monospace">{{ patient.patient_code }}</span>
+          <h5 class="fw-bold mb-0 text-slate-900">{{ patient.full_name }}</h5>
+          {% if patient.blood_group %}
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">{{ patient.blood_group }}</span>
+          {% endif %}
+        </div>
+        <div class="text-muted small mt-1">
+          {{ patient.gender }} · Age: {{ patient.age }} yrs · DOB: {{ patient.dob.strftime('%d %b %Y') }} · Mobile: <code>{{ patient.mobile }}</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check-In Form Card -->
+    <div class="user-table-card">
+      <div class="p-4 border-bottom bg-light">
+        <h5 class="fw-bold mb-0 text-slate-900">
+          <i class="bi bi-ticket-perforated-fill text-primary me-2"></i> Issue OPD Token
+        </h5>
+      </div>
+
+      <form method="POST" action="{{ url_for('reception.check_in', patient_id=patient.id) }}" class="p-4">
+        {{ form.csrf_token }}
+        {{ form.patient_id() }}
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted text-uppercase">
+            <i class="bi bi-hospital text-primary me-1"></i> OPD Department <span class="text-danger">*</span>
+          </label>
+          {{ form.department(class="form-select rounded-3 py-2") }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted text-uppercase">
+            <i class="bi bi-stethoscope text-primary me-1"></i> Consulting Doctor <span class="text-danger">*</span>
+          </label>
+          {{ form.doctor_id(class="form-select rounded-3 py-2" + (" is-invalid" if form.doctor_id.errors else "")) }}
+          {% if not doctors %}
+            <small class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle me-1"></i> No active doctors found. Please ensure doctor profiles are active.</small>
+          {% endif %}
+          {% for err in form.doctor_id.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-bold small text-muted text-uppercase">
+            <i class="bi bi-funnel-fill text-primary me-1"></i> Priority Tier <span class="text-danger">*</span>
+          </label>
+          {{ form.priority(class="form-select rounded-3 py-2") }}
+          <small class="form-text text-muted">Queue priority: Emergency ➔ Senior Citizen ➔ Pregnant ➔ Child ➔ Regular</small>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+          <a href="{{ url_for('reception.dashboard') }}" class="btn btn-light rounded-pill px-4">Cancel</a>
+          <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold" style="background-color: #2563EB; border-color: #2563EB;">
+            <i class="bi bi-printer me-1"></i> Check In & Print Token
+          </button>
+        </div>
+      </form>
+    </div>
+    {% else %}
+    <div class="alert alert-warning p-4 rounded-4 shadow-sm">
+      <i class="bi bi-exclamation-triangle-fill fs-3 me-2"></i>
+      No patient selected. Please use the search bar on the <a href="{{ url_for('reception.dashboard') }}" class="fw-bold">Front Desk Dashboard</a> to select a patient.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

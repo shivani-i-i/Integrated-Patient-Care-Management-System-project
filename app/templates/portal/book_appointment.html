@@ -1,0 +1,276 @@
+{% extends 'portal/base_patient.html' %}
+
+{% block title %}Book Appointment — CareHub Health Portal{% endblock %}
+{% block header_title %}Schedule a Consultation{% endblock %}
+{% block header_subtitle %}Choose your consulting doctor, visit date, and expected arrival window{% endblock %}
+
+{% block extra_css %}
+<style>
+  .window-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1.5px solid #E2E8F0;
+    background-color: #FFFFFF;
+    color: #0F172A;
+    transition: all 0.18s ease;
+    user-select: none;
+    min-width: 110px;
+    text-align: center;
+  }
+  .window-chip:hover {
+    border-color: #2563EB;
+    background-color: #EFF6FF;
+    color: #2563EB;
+  }
+  .window-chip.selected {
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #2563EB !important;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
+  }
+  .window-chip.selected .rec-text {
+    color: #DBEAFE !important;
+  }
+  .window-chip.disabled {
+    background-color: #F8FAFC;
+    color: #94A3B8;
+    border-color: #E2E8F0;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+  .rec-text {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: #64748B;
+    margin-top: 2px;
+  }
+</style>
+{% endblock %}
+
+{% block portal_content %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card border-0 shadow-sm rounded-4" style="background: #FFFFFF; border: 1px solid var(--portal-border) !important;">
+      <div class="p-4 border-bottom" style="border-color: #F1F5F9 !important;">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="bi bi-calendar2-check-fill"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold text-dark mb-0">Dynamic Clinic Scheduling &amp; Arrival Windows</h5>
+            <p class="text-muted small mb-0">Appointments represent expected arrival checkpoints. The live queue advances seamlessly with real consultation flow.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4">
+        <!-- Step 1 & 2: Doctor and Date Picker Form (GET for slot refresh) -->
+        <form method="GET" action="{{ url_for('portal.book_appointment') }}" id="filterForm" class="mb-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">1. Select Consulting Doctor <span class="text-danger">*</span></label>
+              <select name="doctor_id" class="form-select rounded-3" onchange="document.getElementById('filterForm').submit();">
+                <option value="">-- Choose Doctor --</option>
+                {% for doc in doctors %}
+                <option value="{{ doc.id }}" {% if selected_doc_id == doc.id %}selected{% endif %}>
+                  {{ doc.name }} ({{ doc.department or 'General Medicine' }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">2. Select Consultation Date <span class="text-danger">*</span></label>
+              <input type="date" name="date" class="form-control rounded-3" value="{{ selected_date.strftime('%Y-%m-%d') }}" min="{{ today_date if today_date else selected_date.strftime('%Y-%m-%d') }}" onchange="document.getElementById('filterForm').submit();">
+            </div>
+          </div>
+        </form>
+
+        <!-- Doctor Clinic Availability & Live Queue Summary Banner -->
+        {% if selected_doc_id and slot_info.get('has_availability') %}
+        <div class="card border-0 rounded-3 p-3 mb-4" style="background: #F8FAFC; border: 1px solid #E2E8F0 !important;">
+          <div class="row align-items-center g-3">
+            <div class="col-md-4">
+              <div class="text-muted small">Doctor's Clinic Hours:</div>
+              <strong class="text-dark"><i class="bi bi-clock me-1 text-primary"></i> {{ slot_info.clinic_hours_str }}</strong>
+            </div>
+            <div class="col-md-4">
+              <div class="text-muted small">Live Queue Status:</div>
+              {% if slot_info.is_clinic_live_now %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-bold">
+                  <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Clinic Active Now
+                </span>
+              {% else %}
+                <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1">Scheduled for {{ selected_date.strftime('%d %b') }}</span>
+              {% endif %}
+            </div>
+            <div class="col-md-4">
+              <div class="text-muted small">Estimated Waiting Time:</div>
+              <strong class="text-teal font-monospace" style="color: #0D9488;">{{ slot_info.estimated_wait_str }}</strong>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <hr class="my-4" style="border-color: #F1F5F9;">
+
+        {% if patient_existing_apt %}
+        <!-- Active Booking Already Exists Notice -->
+        <div class="card border-0 rounded-4 p-4 shadow-sm mb-4" style="background: #FFFBEB; border: 1.5px solid #FDE68A !important;">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div style="width: 48px; height: 48px; border-radius: 12px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <i class="bi bi-calendar-check-fill"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.96rem;">Active Appointment Already Scheduled</h6>
+                <div class="text-muted small">
+                  You already have an appointment booked with <strong>Dr. {{ patient_existing_apt.doctor.name }}</strong> on <strong>{{ patient_existing_apt.appointment_date.strftime('%A, %d %B %Y') }}</strong> at <strong>{{ patient_existing_apt.slot_time.strftime('%I:%M %p') }}</strong>.
+                </div>
+                <div class="font-monospace small text-primary mt-1">
+                  Reference: <strong>{{ patient_existing_apt.appointment_code }}</strong> · Status: <span class="badge bg-primary-subtle text-primary">{{ patient_existing_apt.status }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="{{ url_for('portal.reschedule_appointment', appointment_id=patient_existing_apt.id) }}" class="btn btn-warning rounded-pill px-3.5 py-2 fw-bold shadow-sm" style="background-color: #F59E0B; color: #FFFFFF; font-size: 0.85rem; border: none;">
+                <i class="bi bi-pencil-square me-1"></i> Reschedule / Edit Timing
+              </a>
+              <a href="{{ url_for('portal.appointments') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" style="background: #2563EB; font-size: 0.85rem;">
+                <i class="bi bi-calendar-event me-1"></i> View My Appointments
+              </a>
+            </div>
+          </div>
+        </div>
+        {% else %}
+
+        <!-- Step 3: Booking Confirmation Form (POST) -->
+        <form method="POST" action="{{ url_for('portal.book_appointment') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="doctor_id" value="{{ selected_doc_id or '' }}">
+          <input type="hidden" name="appointment_date" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+          <input type="hidden" name="slot_time" id="selectedSlotInput" value="">
+
+          <!-- Available Arrival Windows Display -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <label class="form-label small fw-bold text-muted mb-0">
+                3. Choose Expected Arrival Time on {{ selected_date.strftime('%A, %d %B %Y') }} <span class="text-danger">*</span>
+              </label>
+            </div>
+
+            <div class="alert alert-info border-0 rounded-3 p-3 mb-3 small" style="background: #EFF6FF; color: #1E40AF;">
+              <i class="bi bi-info-circle-fill me-1.5"></i>
+              <strong>Dynamic Queue Model:</strong> Consultations are not restricted to artificial 15-minute boxes. Select your expected arrival checkpoint. We recommend arriving 10 minutes prior for token verification.
+            </div>
+
+            {% if not selected_doc_id %}
+              <div class="alert alert-light border rounded-3 text-muted small p-3">
+                <i class="bi bi-arrow-up-circle me-1"></i> Please select a consulting doctor above to see available arrival windows.
+              </div>
+            {% elif slot_info.get('is_holiday') %}
+              <div class="alert alert-warning border rounded-3 small p-3">
+                <i class="bi bi-calendar-x me-1"></i> <strong>Hospital Holiday / Closed:</strong> {{ slot_info.get('holiday_reason') }}
+              </div>
+            {% elif not slot_info.get('has_availability') and not slot_info.get('is_scheduled') %}
+              <div class="alert alert-light border rounded-3 text-muted small p-3">
+                <i class="bi bi-info-circle me-1"></i> The selected doctor is not on shift on {{ selected_date.strftime('%A') }}s. Please pick another date.
+              </div>
+            {% elif slot_info.get('slots') %}
+              <div class="d-flex flex-wrap gap-2 pt-1">
+                {% for s in slot_info.get('slots') %}
+                  {% if not s.get('is_past') and s.reason != 'Past' %}
+                    {% if not s.is_available %}
+                      <div class="window-chip disabled" title="{{ s.reason }}">
+                        <div>{{ s.time_str }}</div>
+                        <div class="rec-text">{{ s.reason }}</div>
+                      </div>
+                    {% else %}
+                      <div class="window-chip" onclick="selectWindow('{{ s.time_raw }}', '{{ s.time_str }}', '{{ s.recommended_arrival }}', this)">
+                        <div>{{ s.time_str }}</div>
+                        <div class="rec-text">Arrive: {{ s.recommended_arrival }}</div>
+                      </div>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+
+              <!-- Selected Window Summary Card -->
+              <div id="selectionSummaryCard" class="card border-0 rounded-3 p-3 mt-3 d-none" style="background: #F0FDF4; border: 1px solid #BBF7D0 !important;">
+                <div class="d-flex align-items-center gap-3">
+                  <div style="width: 40px; height: 40px; border-radius: 10px; background: #059669; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="bi bi-check2"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark" id="summaryArrivalText">Expected Arrival: —</div>
+                    <div class="text-success small" id="summaryReportingText">Recommended Check-in: —</div>
+                  </div>
+                </div>
+              </div>
+
+            {% else %}
+              <div class="alert alert-warning border rounded-3 small p-3">
+                <i class="bi bi-exclamation-triangle me-1"></i> All arrival checkpoints for this date are fully reserved.
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Symptoms / Notes -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-muted">4. Chief Complaints / Reason for Visit (Optional)</label>
+            <textarea name="notes" class="form-control rounded-3" rows="3" placeholder="Describe symptoms, fever duration, or purpose of follow-up..."></textarea>
+          </div>
+
+          <!-- Submit -->
+          <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+            <a href="{{ url_for('portal.appointments') }}" class="btn btn-light border rounded-pill px-4 fw-semibold">
+              <i class="bi bi-arrow-left me-1"></i> Back to Appointments
+            </a>
+            <button type="submit" id="submitBookingBtn" class="btn btn-primary rounded-pill px-5 fw-bold" style="background-color: #2563EB;" disabled>
+              <i class="bi bi-check2-circle me-1"></i> Confirm Appointment
+            </button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function selectWindow(timeRaw, timeStr, recArrival, el) {
+    document.querySelectorAll('.window-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    var inputEl = document.getElementById('selectedSlotInput');
+    if (inputEl) {
+      inputEl.value = timeRaw;
+    }
+    var btn = document.getElementById('submitBookingBtn');
+    if (btn) {
+      btn.disabled = false;
+    }
+
+    // Update Summary Card
+    const summaryCard = document.getElementById('selectionSummaryCard');
+    if (summaryCard) {
+      summaryCard.classList.remove('d-none');
+      var arrEl = document.getElementById('summaryArrivalText');
+      if (arrEl) arrEl.innerText = `Selected Expected Arrival: ${timeStr}`;
+      var repEl = document.getElementById('summaryReportingText');
+      if (repEl) repEl.innerText = `Recommended Check-in Time: ${recArrival} (Please report at reception for instant token)`;
+    }
+  }
+</script>
+{% endblock %}

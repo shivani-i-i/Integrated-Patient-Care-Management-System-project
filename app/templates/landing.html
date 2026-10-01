@@ -1,0 +1,3749 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareHub — Integrated Patient Care Management System</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+
+  <style>
+    :root {
+      --primary-navy: #0F172A;
+      --primary-blue: #1E40AF;
+      --primary-blue-hover: #1D4ED8;
+      --accent-teal: #0D9488;
+      --accent-teal-light: #CCFBF1;
+      --slate-bg: #F8FAFC;
+      --text-muted: #64748B;
+      --text-dark: #0F172A;
+      --border-color: #E2E8F0;
+      --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.02);
+      --card-shadow-hover: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #FFFFFF;
+      color: var(--text-dark);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* -------------------------------------------------------------
+       1. Navigation Header
+    ------------------------------------------------------------- */
+    .carehub-navbar {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.85rem 0;
+      z-index: 1050;
+      transition: all 0.25s ease;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .nav-link-item {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #475569 !important;
+      padding: 0.5rem 1rem !important;
+      position: relative;
+      transition: color 0.2s ease;
+    }
+
+    .nav-link-item:hover,
+    .nav-link-item.active {
+      color: var(--primary-blue) !important;
+    }
+
+    .nav-link-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 3px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #1D4ED8 0%, #0D9488 100%);
+    }
+
+    .nav-contact-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 16px;
+      background: #F8FAFC;
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--primary-navy);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .nav-contact-pill:hover {
+      background: #EFF6FF;
+      border-color: #BFDBFE;
+      color: var(--primary-blue);
+      transform: translateY(-1px);
+    }
+
+    .nav-contact-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      color: var(--primary-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+    }
+
+    /* Unified Patient Portal Primary CTA */
+    .btn-patient-portal {
+      background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%);
+      color: #FFFFFF !important;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.65rem 1.45rem;
+      border-radius: 30px;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(30, 64, 175, 0.25);
+      transition: transform 260ms ease, box-shadow 260ms ease, background 260ms ease;
+      cursor: pointer;
+    }
+
+    .btn-patient-portal .portal-arrow {
+      transition: transform 260ms ease;
+    }
+
+    .btn-patient-portal:hover {
+      background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
+      color: #FFFFFF !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(30, 64, 175, 0.35);
+    }
+
+    .btn-patient-portal:hover .portal-arrow {
+      transform: translateX(4px);
+    }
+
+    .btn-patient-portal:active {
+      transform: translateY(0);
+    }
+
+    /* -------------------------------------------------------------
+       2. Hero Section - Premium Modern Healthcare Aesthetic
+    ------------------------------------------------------------- */
+    .hero-wrapper {
+      position: relative;
+      background: #FFFFFF;
+      padding: 3.5rem 0 4.25rem 0;
+      min-height: 84vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .hero-wrapper > .container {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Subtle Animated Background Canvas */
+    .hero-bg-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    /* Subtle Grid Pattern on left side */
+    .hero-grid-subtle {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 540px;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+      background-size: 38px 38px;
+      -webkit-mask-image: radial-gradient(ellipse 75% 75% at 20% 35%, #000 25%, transparent 85%);
+      mask-image: radial-gradient(ellipse 75% 75% at 20% 35%, #000 25%, transparent 85%);
+    }
+
+    /* Organic soft shape behind right image */
+    .hero-shape-backdrop {
+      position: absolute;
+      width: 580px;
+      height: 460px;
+      top: -20px;
+      right: -30px;
+      background: radial-gradient(ellipse at 56% 48%, rgba(103, 232, 249, 0.62) 0%, rgba(165, 243, 252, 0.48) 42%, rgba(224, 242, 254, 0.28) 72%, transparent 100%);
+      border-radius: 46% 54% 58% 42% / 44% 56% 44% 56%;
+      filter: blur(14px);
+      z-index: 0;
+      pointer-events: none;
+      animation: shapeMorph 10s ease-in-out infinite alternate;
+      transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    @keyframes shapeMorph {
+      0% {
+        border-radius: 46% 54% 58% 42% / 44% 56% 44% 56%;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+      50% {
+        border-radius: 52% 48% 46% 54% / 50% 48% 52% 50%;
+        transform: translate(-10px, -12px) scale(1.03) rotate(1.5deg);
+      }
+      100% {
+        border-radius: 56% 44% 42% 58% / 54% 46% 54% 46%;
+        transform: translate(-15px, 10px) scale(1.02) rotate(-1deg);
+      }
+    }
+
+    /* Soft ambient cyan/blue glow around hero image */
+    .hero-glow-soft {
+      position: absolute;
+      width: 440px;
+      height: 440px;
+      top: 0px;
+      right: 10px;
+      background: radial-gradient(circle, rgba(186, 230, 253, 0.45) 0%, rgba(204, 251, 241, 0.25) 50%, transparent 75%);
+      filter: blur(45px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Decorative Dot Matrix in top-right behind image */
+    .hero-decor-dot-matrix {
+      position: absolute;
+      top: 28px;
+      right: 32px;
+      width: 140px;
+      height: 72px;
+      background-image: radial-gradient(rgba(13, 148, 136, 0.28) 2px, transparent 2px);
+      background-size: 14px 14px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Decorative Medical Pluses */
+    .hero-decor-plus {
+      position: absolute;
+      color: rgba(6, 182, 212, 0.6);
+      font-size: 1.25rem;
+      font-weight: 300;
+      pointer-events: none;
+      z-index: 1;
+      animation: floatPlus 5s ease-in-out infinite alternate;
+    }
+
+    .hero-decor-plus.plus-sm {
+      font-size: 1rem;
+      color: rgba(13, 148, 136, 0.45);
+    }
+
+    .hero-decor-plus.plus-blue {
+      color: rgba(37, 99, 235, 0.5);
+    }
+
+    @keyframes floatPlus {
+      0% {
+        opacity: 0.45;
+        transform: translateY(0);
+      }
+      100% {
+        opacity: 0.85;
+        transform: translateY(-6px);
+      }
+    }
+
+    /* Floating micro decorative dots */
+    .hero-decor-dot {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .dot-teal {
+      width: 7px;
+      height: 7px;
+      background: #0D9488;
+      box-shadow: 0 0 10px 2px rgba(13, 148, 136, 0.4);
+      animation: floatDot 6s ease-in-out infinite alternate;
+    }
+
+    .dot-blue {
+      width: 6px;
+      height: 6px;
+      background: #2563EB;
+      box-shadow: 0 0 10px 2px rgba(37, 99, 235, 0.4);
+      animation: floatDot 7s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes floatDot {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-7px); }
+    }
+
+    /* Hero Typography */
+    .hero-main-title {
+      font-size: clamp(2.4rem, 3.8vw, 3.45rem);
+      font-weight: 800;
+      line-height: 1.14;
+      color: var(--primary-navy);
+      letter-spacing: -1px;
+      margin-bottom: 1.35rem;
+    }
+
+    .text-gradient-accent {
+      background: linear-gradient(135deg, #0284C7 0%, #0D9488 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-block;
+    }
+
+    .hero-lead-text {
+      font-size: 1.05rem;
+      color: #475569;
+      line-height: 1.68;
+      margin-bottom: 2rem;
+      max-width: 530px;
+    }
+
+    /* CTA Group */
+    .cta-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Book an Appointment Primary CTA with Ambient Pulsing Glow */
+    .btn-cta-primary {
+      background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
+      color: #FFFFFF !important;
+      font-weight: 700;
+      font-size: 0.96rem;
+      padding: 0.85rem 1.85rem;
+      border-radius: 50px;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.38);
+      animation: ctaPulseGlow 2.8s ease-in-out infinite;
+      transition: transform 250ms ease, box-shadow 250ms ease, background 250ms ease;
+      cursor: pointer;
+    }
+
+    @keyframes ctaPulseGlow {
+      0%, 100% {
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+      }
+      50% {
+        box-shadow: 0 6px 26px rgba(37, 99, 235, 0.58), 0 0 14px rgba(56, 189, 248, 0.35);
+      }
+    }
+
+    .btn-cta-primary:hover {
+      transform: translateY(-2.5px);
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.55), 0 0 18px rgba(56, 189, 248, 0.4);
+      background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%);
+      color: #FFFFFF !important;
+    }
+
+    .btn-cta-primary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-cta-primary .cta-arrow {
+      transition: transform 250ms ease;
+      font-size: 0.95rem;
+    }
+
+    .btn-cta-primary:hover .cta-arrow {
+      transform: translateX(5px);
+    }
+
+    .btn-cta-primary i:first-child {
+      transition: transform 250ms ease;
+    }
+
+    .btn-cta-primary:hover i:first-child {
+      transform: scale(1.08);
+    }
+
+    /* Explore Services Secondary CTA */
+    .btn-cta-secondary {
+      background: #FFFFFF;
+      color: #0F172A !important;
+      border: 1.5px solid #E2E8F0;
+      font-weight: 700;
+      font-size: 0.96rem;
+      padding: 0.85rem 1.85rem;
+      border-radius: 50px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease, background 250ms ease, color 250ms ease;
+    }
+
+    .btn-cta-secondary:hover {
+      border-color: #CBD5E1;
+      background: #F8FAFC;
+      color: #1D4ED8 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .btn-cta-secondary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-cta-secondary .cta-arrow {
+      transition: transform 250ms ease;
+      font-size: 0.88rem;
+    }
+
+    .btn-cta-secondary:hover .cta-arrow {
+      transform: translateX(4px);
+    }
+
+    /* -------------------------------------------------------------
+       Feature Strip under CTA (Non-numeric value propositions)
+    ------------------------------------------------------------- */
+    .hero-feature-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 2.2rem;
+      padding-top: 1.8rem;
+      border-top: 1px solid rgba(226, 232, 240, 0.8);
+      max-width: 540px;
+    }
+
+    .hero-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      opacity: 0;
+      animation: featureItemFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .hero-feature-item:nth-child(1) { animation-delay: 0.65s; }
+    .hero-feature-item:nth-child(2) { animation-delay: 0.75s; }
+    .hero-feature-item:nth-child(3) { animation-delay: 0.85s; }
+
+    @keyframes featureItemFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero-feature-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #E0F2FE;
+      color: #0284C7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .hero-feature-icon svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    .hero-feature-item:nth-child(2) .hero-feature-icon {
+      background: #CCFBF1;
+      color: #0D9488;
+    }
+
+    .hero-feature-item:nth-child(3) .hero-feature-icon {
+      background: #CCFBF1;
+      color: #0D9488;
+    }
+
+    .hero-feature-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.25;
+      margin-bottom: 2px;
+    }
+
+    .hero-feature-desc {
+      font-size: 0.74rem;
+      color: #64748B;
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    /* -------------------------------------------------------------
+       Hero Photo Stage & Carousel (Right Column - Compact & Sleek)
+    ------------------------------------------------------------- */
+    .hero-photo-stage-wrapper {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-photo-stage {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      height: 380px;
+      margin-left: auto;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 18px 40px -10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8);
+      border: 5px solid #FFFFFF;
+      background: #E2E8F0;
+      transform: translateZ(0);
+      will-change: transform;
+      transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .hero-slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0;
+      transform: scale(1.03);
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 5s ease-out;
+    }
+
+    .hero-slide.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Floating Informational Cards */
+    .hero-floating-card {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 9px 15px;
+      box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      z-index: 10;
+      cursor: default;
+      transition: transform 0.25s ease;
+    }
+
+    .hero-floating-card:hover {
+      transform: scale(1.02);
+    }
+
+    /* Top-Right Floating Card */
+    .hero-float-top-right {
+      top: 16px;
+      right: 16px;
+      animation: floatCardTop 4.5s ease-in-out infinite;
+    }
+
+    @keyframes floatCardTop {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    /* Lower-Left Floating Card */
+    .hero-float-lower-left {
+      bottom: 18px;
+      left: -20px;
+      animation: floatCardBottom 5.5s ease-in-out 1.2s infinite;
+    }
+
+    @keyframes floatCardBottom {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(5px);
+      }
+    }
+
+    .hero-float-icon-wrap {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #CCFBF1;
+      color: #0D9488;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .hero-float-icon-wrap.icon-heart {
+      background: #CCFBF1;
+      color: #0D9488;
+    }
+
+    .hero-float-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.2;
+    }
+
+    .hero-float-sub {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #64748B;
+    }
+
+    .hero-float-arrow {
+      color: #1D4ED8;
+      font-size: 0.8rem;
+      margin-left: 2px;
+    }
+
+    /* Carousel Navigation Controls Pill Bottom-Right */
+    .hero-carousel-controls {
+      position: absolute;
+      bottom: 18px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 12;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-nav-arrow {
+      background: transparent;
+      border: none;
+      color: #FFFFFF;
+      font-size: 0.75rem;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      padding: 0;
+    }
+
+    .hero-nav-arrow:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.1);
+    }
+
+    .hero-dots-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      cursor: pointer;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.3s ease, background 0.3s ease;
+    }
+
+    .hero-dot.active {
+      width: 22px;
+      border-radius: 4px;
+      background: #FFFFFF;
+    }
+
+    /* Staggered Entrance Animations */
+    @keyframes heroFadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero-anim-1 { animation: heroFadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+    .hero-anim-2 { animation: heroFadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+    .hero-anim-3 { animation: heroFadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+    .hero-anim-4 { animation: heroFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+
+    /* Accessibility: Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-shape-backdrop,
+      .hero-decor-plus,
+      .dot-teal,
+      .dot-blue,
+      .btn-cta-primary,
+      .hero-float-top-right,
+      .hero-float-lower-left,
+      .hero-feature-item,
+      .hero-anim-1,
+      .hero-anim-2,
+      .hero-anim-3,
+      .hero-anim-4,
+      .trust-shape-backdrop,
+      .trust-decor-plus,
+      .trust-pill-badge,
+      .reveal-elem,
+      .reveal-video {
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        transition: none !important;
+      }
+      .hero-photo-stage,
+      .trust-photo-box {
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 991px) {
+      .hero-wrapper {
+        padding: 3rem 0 3.5rem 0;
+      }
+      .hero-main-title {
+        font-size: 2.5rem;
+      }
+      .hero-photo-stage {
+        height: 380px;
+        margin-top: 1rem;
+      }
+      .hero-float-lower-left {
+        left: 12px;
+        bottom: 16px;
+      }
+      .hero-shape-backdrop {
+        width: 480px;
+        height: 400px;
+        right: -40px;
+      }
+      .hero-feature-strip {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        max-width: 100%;
+      }
+      .trust-section {
+        padding: 4.25rem 0;
+      }
+      .trust-photo-box video {
+        height: 340px;
+      }
+      .trust-shape-backdrop {
+        width: 380px;
+        height: 320px;
+        left: -15px;
+      }
+      .trust-pill-badge {
+        bottom: 14px;
+        left: 14px;
+        padding: 8px 12px;
+      }
+    }
+
+    /* -------------------------------------------------------------
+       3. Trust & Why Choose Section - Premium Healthcare SaaS
+    ------------------------------------------------------------- */
+    .trust-section {
+      position: relative;
+      padding: 6.5rem 0 6.5rem 0;
+      background: radial-gradient(ellipse 95% 75% at 50% 25%, #FFFFFF 25%, #F8FAFC 70%, #F0F9FF 100%);
+      border-bottom: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    /* Subtle background canvas for section 3 */
+    .trust-bg-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .trust-grid-subtle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 500px;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+      -webkit-mask-image: radial-gradient(ellipse 70% 70% at 75% 40%, #000 20%, transparent 80%);
+      mask-image: radial-gradient(ellipse 70% 70% at 75% 40%, #000 20%, transparent 80%);
+    }
+
+    /* Soft ambient cyan/blue glow near video */
+    .trust-glow-soft {
+      position: absolute;
+      width: 480px;
+      height: 480px;
+      top: 15%;
+      left: -60px;
+      background: radial-gradient(circle, rgba(186, 230, 253, 0.45) 0%, rgba(204, 251, 241, 0.22) 50%, transparent 75%);
+      filter: blur(50px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Decorative Plus & Dots */
+    .trust-decor-plus {
+      position: absolute;
+      color: rgba(6, 182, 212, 0.55);
+      font-size: 1.15rem;
+      pointer-events: none;
+      z-index: 1;
+      animation: floatPlus 5.5s ease-in-out infinite alternate;
+    }
+
+    .trust-decor-plus.plus-teal {
+      color: rgba(13, 148, 136, 0.45);
+      font-size: 1.25rem;
+    }
+
+    .trust-decor-dot {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Video Column & Stage Container */
+    .trust-video-wrapper {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Organic background shape behind the video */
+    .trust-shape-backdrop {
+      position: absolute;
+      width: 540px;
+      height: 480px;
+      top: -25px;
+      left: -35px;
+      background: radial-gradient(ellipse at 48% 52%, rgba(103, 232, 249, 0.55) 0%, rgba(165, 243, 252, 0.42) 45%, rgba(224, 242, 254, 0.22) 75%, transparent 100%);
+      border-radius: 48% 52% 44% 56% / 54% 46% 54% 46%;
+      filter: blur(14px);
+      z-index: 0;
+      pointer-events: none;
+      animation: videoShapeMorph 11s ease-in-out infinite alternate;
+    }
+
+    @keyframes videoShapeMorph {
+      0% {
+        border-radius: 48% 52% 44% 56% / 54% 46% 54% 46%;
+        transform: translate(0, 0) rotate(0deg);
+      }
+      50% {
+        border-radius: 54% 46% 52% 48% / 46% 54% 48% 52%;
+        transform: translate(10px, -12px) scale(1.025) rotate(-1.5deg);
+      }
+      100% {
+        border-radius: 44% 56% 48% 52% / 52% 48% 46% 54%;
+        transform: translate(14px, 8px) scale(1.015) rotate(1deg);
+      }
+    }
+
+    /* Cinematic Video Card */
+    .trust-photo-box {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 22px 50px -10px rgba(15, 23, 42, 0.13), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      border: 5px solid #FFFFFF;
+      background: #0F172A;
+      transform: translateZ(0);
+      will-change: transform, box-shadow;
+      transition: transform 320ms cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 320ms cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 1;
+    }
+
+    .trust-photo-box:hover {
+      transform: translateY(-4px) scale(1.008);
+      box-shadow: 0 30px 65px -10px rgba(15, 23, 42, 0.18), 0 0 20px rgba(103, 232, 249, 0.25);
+    }
+
+    .trust-photo-box video {
+      width: 100%;
+      height: 440px;
+      object-fit: cover;
+      display: block;
+      border-radius: 22px;
+      transform: translateZ(0);
+    }
+
+    /* Subtle bottom gradient overlay on video */
+    .trust-video-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      background: linear-gradient(180deg, transparent 65%, rgba(15, 23, 42, 0.38) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Small Understated Video Tag */
+    .trust-video-tag {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      padding: 5px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #FFFFFF;
+      text-transform: uppercase;
+      z-index: 3;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .trust-tag-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 8px #10B981;
+    }
+
+    /* Floating Video Information Card */
+    .trust-pill-badge {
+      position: absolute;
+      bottom: 22px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 10px 16px;
+      box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.15);
+      z-index: 4;
+      animation: floatTrustCard 4.5s ease-in-out infinite;
+      cursor: default;
+      transition: transform 0.25s ease;
+    }
+
+    .trust-pill-badge:hover {
+      transform: scale(1.02);
+    }
+
+    @keyframes floatTrustCard {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    .trust-badge-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #CCFBF1;
+      color: #0D9488;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .trust-badge-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.25;
+    }
+
+    .trust-badge-sub {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #64748B;
+      line-height: 1.25;
+    }
+
+    /* Section Label Pill */
+    .section-label-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #DBEAFE;
+      border-radius: 30px;
+      padding: 5px 14px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .label-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #2563EB;
+    }
+
+    /* Section Heading */
+    .trust-main-heading {
+      font-size: clamp(2rem, 3.2vw, 2.65rem);
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--primary-navy);
+      letter-spacing: -0.6px;
+      margin-bottom: 1rem;
+    }
+
+    .trust-lead-desc {
+      font-size: 1.02rem;
+      color: #475569;
+      line-height: 1.68;
+      margin-bottom: 2rem;
+      max-width: 580px;
+    }
+
+    /* Four Feature Cards in 2x2 Grid */
+    .trust-point-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 18px;
+      padding: 18px 20px;
+      height: 100%;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+      transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+    }
+
+    .trust-point-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 26px -4px rgba(15, 23, 42, 0.08);
+      border-color: #BFDBFE;
+    }
+
+    .trust-point-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      transition: transform 260ms ease;
+    }
+
+    .trust-point-card:hover .trust-point-icon {
+      transform: scale(1.08);
+    }
+
+    .trust-point-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 3px;
+      line-height: 1.25;
+    }
+
+    .trust-point-desc {
+      font-size: 0.78rem;
+      color: #64748B;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    /* Staggered Scroll Reveal Transitions */
+    .reveal-elem {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .scroll-reveal.revealed .reveal-elem {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-video {
+      opacity: 0;
+      transform: translateY(26px) scale(0.985);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .scroll-reveal.revealed .reveal-video {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .scroll-reveal.revealed .rev-d1 { transition-delay: 0.08s; }
+    .scroll-reveal.revealed .rev-d2 { transition-delay: 0.16s; }
+    .scroll-reveal.revealed .rev-d3 { transition-delay: 0.24s; }
+    .scroll-reveal.revealed .rev-d4 { transition-delay: 0.32s; }
+    .scroll-reveal.revealed .rev-d5 { transition-delay: 0.40s; }
+    .scroll-reveal.revealed .rev-d6 { transition-delay: 0.48s; }
+    .scroll-reveal.revealed .rev-d7 { transition-delay: 0.56s; }
+
+    /* -------------------------------------------------------------
+       4. Doctors Section (Center-Focused 3D Carousel)
+    ------------------------------------------------------------- */
+    .doctors-section {
+      padding: 5.5rem 0;
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    .stage-3d-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      margin: 2.5rem auto 0;
+      min-height: 460px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stage-3d {
+      position: relative;
+      width: 100%;
+      height: 440px;
+      perspective: 1200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-3d {
+      position: absolute;
+      width: 310px;
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1.5px solid var(--border-color);
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .card-3d.is-center {
+      border-color: var(--primary-blue);
+      box-shadow: 0 20px 45px rgba(30, 64, 175, 0.14);
+      cursor: default;
+    }
+
+    .card-3d-img-box {
+      width: 100%;
+      height: 220px;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: #F1F5F9;
+    }
+
+    .card-3d-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+
+    .card-3d-name {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--primary-navy);
+      margin-bottom: 2px;
+    }
+
+    .card-3d-spec {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin-bottom: 8px;
+    }
+
+    .card-3d-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid #F1F5F9;
+      margin-top: 6px;
+    }
+
+    .card-3d-exp {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-teal);
+      background: var(--accent-teal-light);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .nav-btn-3d {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      color: var(--primary-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn-3d:hover {
+      background: var(--primary-blue);
+      color: #FFFFFF;
+      border-color: var(--primary-blue);
+    }
+
+    .nav-btn-3d.prev {
+      left: 10px;
+    }
+
+    .nav-btn-3d.next {
+      right: 10px;
+    }
+
+    .dots-3d-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 1.5rem;
+    }
+
+    .dot-3d {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #CBD5E1;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot-3d.active {
+      width: 24px;
+      border-radius: 8px;
+      background: var(--primary-blue);
+    }
+
+    /* -------------------------------------------------------------
+       5. Services Section (Editorial Mixed Layout)
+    ------------------------------------------------------------- */
+    .services-section {
+      padding: 5.5rem 0;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .service-card-featured {
+      background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+      color: #FFFFFF;
+      border-radius: 22px;
+      padding: 36px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+    }
+
+    .service-card-featured::after {
+      content: '';
+      position: absolute;
+      right: -20px;
+      bottom: -20px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(13, 148, 136, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+      border-radius: 50%;
+    }
+
+    .service-card-standard {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 26px;
+      height: 100%;
+      transition: all 0.25s ease;
+      box-shadow: var(--card-shadow);
+    }
+
+    .service-card-standard:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
+      border-color: #BFDBFE;
+    }
+
+    .service-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      margin-bottom: 16px;
+    }
+
+    /* -------------------------------------------------------------
+       6. Departments / Clinical Ecosystem (Interactive Selector)
+    ------------------------------------------------------------- */
+    .departments-section {
+      position: relative;
+      padding: 6rem 0;
+      background: radial-gradient(ellipse 90% 70% at 50% 15%, #FFFFFF 20%, #F8FAFC 70%, #F0F9FF 100%);
+      border-bottom: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    /* Ambient Subtle Background Grid & Glowing Orbs */
+    .dept-grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(37, 99, 235, 0.055) 1.2px, transparent 1.2px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.9;
+    }
+
+    .dept-ambient-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(55px);
+      pointer-events: none;
+      z-index: 0;
+      will-change: transform, opacity;
+    }
+
+    .dept-orb-left {
+      left: -120px;
+      top: 25%;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.085) 0%, rgba(14, 165, 233, 0) 70%);
+      animation: deptOrbFloatLeft 12s ease-in-out infinite alternate;
+    }
+
+    .dept-orb-right {
+      right: -100px;
+      bottom: 10%;
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(30, 64, 175, 0.075) 0%, rgba(30, 64, 175, 0) 70%);
+      animation: deptOrbFloatRight 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes deptOrbFloatLeft {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.65;
+      }
+      100% {
+        transform: translate(35px, 25px) scale(1.08);
+        opacity: 0.95;
+      }
+    }
+
+    @keyframes deptOrbFloatRight {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.6;
+      }
+      100% {
+        transform: translate(-30px, -20px) scale(1.06);
+        opacity: 0.9;
+      }
+    }
+
+    /* Section Header Components */
+    .dept-section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #DBEAFE;
+      border-radius: 30px;
+      padding: 6px 16px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.05);
+    }
+
+    .dept-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2563EB;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.65);
+    }
+
+    .dept-main-heading {
+      font-size: clamp(2.1rem, 3.3vw, 2.75rem);
+      font-weight: 800;
+      color: var(--primary-navy);
+      letter-spacing: -0.6px;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+
+    .dept-heading-accent {
+      background: linear-gradient(135deg, #1E40AF 0%, #0D9488 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dept-lead-desc {
+      font-size: 1.02rem;
+      color: #475569;
+      line-height: 1.68;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Department Selector Navigation Column */
+    .dept-selector-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Subtle connecting depth glow behind selector column */
+    .dept-selector-wrapper::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 20px;
+      bottom: 20px;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.15) 0%, rgba(13, 148, 136, 0.15) 100%);
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .dept-tab-card {
+      position: relative;
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+      transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 280ms ease,
+                  border-color 280ms ease,
+                  background 300ms ease,
+                  color 300ms ease;
+      overflow: hidden;
+      outline: none;
+      z-index: 1;
+    }
+
+    .dept-tab-card:hover:not(.active) {
+      transform: translateY(-2.5px);
+      box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.07);
+      border-color: #BFDBFE;
+    }
+
+    .dept-tab-card:hover:not(.active) .dept-card-arrow {
+      transform: translateX(4px);
+      color: #1D4ED8;
+    }
+
+    .dept-tab-card:hover:not(.active) .dept-icon-box {
+      transform: scale(1.05);
+    }
+
+    /* Active Department Card */
+    .dept-tab-card.active {
+      background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 55%, #0F766E 115%);
+      border-color: #1E40AF;
+      color: #FFFFFF;
+      box-shadow: 0 14px 30px -4px rgba(30, 64, 175, 0.32), 0 4px 12px rgba(30, 64, 175, 0.12);
+      transform: translateY(-2px);
+    }
+
+    /* Glowing indicator on active card left edge */
+    .dept-active-indicator {
+      position: absolute;
+      left: 0;
+      top: 18%;
+      bottom: 18%;
+      width: 4.5px;
+      border-radius: 0 6px 6px 0;
+      background: #38BDF8;
+      box-shadow: 0 0 12px #38BDF8;
+      opacity: 0;
+      transform: scaleY(0.4);
+      transition: opacity 300ms ease, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .dept-tab-card.active .dept-active-indicator {
+      opacity: 1;
+      transform: scaleY(1);
+    }
+
+    /* Subtle directional cue on active card right edge */
+    .dept-tab-card.active::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 3px 0 0 3px;
+    }
+
+    /* Department Icon Containers */
+    .dept-icon-box {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      border: 1px solid transparent;
+      transition: transform 260ms ease, background 260ms ease, color 260ms ease, border-color 260ms ease;
+    }
+
+    .dept-icon-opd {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border-color: #DBEAFE;
+    }
+
+    .dept-icon-ipd {
+      background: #F0FDF4;
+      color: #0D9488;
+      border-color: #DCFCE7;
+    }
+
+    .dept-icon-diag {
+      background: #F5F3FF;
+      color: #7C3AED;
+      border-color: #EDE9FE;
+    }
+
+    .dept-icon-pharm {
+      background: #FFFBEB;
+      color: #D97706;
+      border-color: #FEF3C7;
+    }
+
+    .dept-tab-card.active .dept-icon-box {
+      background: rgba(255, 255, 255, 0.22) !important;
+      color: #FFFFFF !important;
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.18);
+    }
+
+    /* Text within department card */
+    .dept-card-text {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .dept-card-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 2px;
+      line-height: 1.3;
+      transition: color 240ms ease;
+    }
+
+    .dept-tab-card.active .dept-card-title {
+      color: #FFFFFF;
+    }
+
+    .dept-card-sub {
+      font-size: 0.77rem;
+      color: #64748B;
+      font-weight: 500;
+      line-height: 1.35;
+      transition: color 240ms ease;
+    }
+
+    .dept-tab-card.active .dept-card-sub {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .dept-card-arrow {
+      color: #94A3B8;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 260ms ease, color 260ms ease;
+      flex-shrink: 0;
+    }
+
+    .dept-tab-card.active .dept-card-arrow {
+      color: #93C5FD;
+      transform: translateX(3px);
+    }
+
+    /* -------------------------------------------------------------
+       Right Column: Detail Showcase Panel
+    ------------------------------------------------------------- */
+    .dept-display-panel {
+      position: relative;
+      background: linear-gradient(145deg, #FFFFFF 0%, #F8FBFF 100%);
+      border: 1px solid #DBEAFE;
+      border-radius: 26px;
+      padding: 38px 42px;
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.07), 0 8px 24px -4px rgba(30, 64, 175, 0.05);
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Subtle Interior Medical Decoration Watermark */
+    .dept-watermark-bg {
+      position: absolute;
+      right: 25px;
+      bottom: 20px;
+      color: #1E40AF;
+      opacity: 0.045;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+    }
+
+    /* Subtle Interior Radial Light Accent */
+    .dept-panel-glow {
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .dept-panel-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* Top Row: Badge & Action CTA */
+    .dept-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+      border-radius: 30px;
+      padding: 6px 16px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .dept-pill-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2563EB;
+      box-shadow: 0 0 8px #2563EB;
+      animation: deptPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes deptPulse {
+      0%, 100% {
+        opacity: 0.5;
+        transform: scale(0.9);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.25);
+      }
+    }
+
+    .btn-dept-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #FFFFFF;
+      color: #1D4ED8;
+      border: 1.5px solid #2563EB;
+      border-radius: 50px;
+      padding: 7px 18px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
+      transition: all 260ms ease;
+    }
+
+    .btn-dept-action:hover {
+      background: #EFF6FF;
+      color: #1E40AF;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.18);
+    }
+
+    .btn-dept-action:active {
+      transform: translateY(0);
+    }
+
+    .dept-action-arrow {
+      transition: transform 260ms ease;
+    }
+
+    .btn-dept-action:hover .dept-action-arrow {
+      transform: translateX(4px);
+    }
+
+    /* Detail Title & Description */
+    .dept-detail-title {
+      font-size: clamp(1.6rem, 2.3vw, 2rem);
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.4px;
+      line-height: 1.25;
+      margin-bottom: 12px;
+    }
+
+    .dept-detail-desc {
+      font-size: 1.02rem;
+      color: #475569;
+      line-height: 1.68;
+      margin-bottom: 24px;
+      max-width: 620px;
+    }
+
+    /* Clinical Capabilities Refined Inner Panel */
+    .dept-capabilities-box {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 18px;
+      padding: 22px 24px;
+      margin-top: auto;
+    }
+
+    .dept-capabilities-header {
+      margin-bottom: 14px;
+    }
+
+    .dept-cap-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #1E40AF;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .dept-capabilities-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .dept-cap-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: capItemFadeIn 380ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes capItemFadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .dept-cap-icon-wrap {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      color: #2563EB;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+      border: 1px solid #DBEAFE;
+    }
+
+    .dept-cap-text {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #1E293B;
+      line-height: 1.45;
+    }
+
+    /* Detail Panel Switching Animations */
+    .dept-display-panel.panel-switching-out {
+      opacity: 0;
+      transform: translateX(10px);
+      transition: opacity 150ms ease, transform 150ms ease;
+    }
+
+    .dept-display-panel.panel-switching-in {
+      animation: panelContentEnter 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes panelContentEnter {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 991px) {
+      .departments-section {
+        padding: 4.5rem 0;
+      }
+      .dept-display-panel {
+        padding: 28px 24px;
+        min-height: auto;
+      }
+      .dept-detail-title {
+        font-size: 1.55rem;
+      }
+      .dept-selector-wrapper::before {
+        display: none;
+      }
+    }
+
+    @media (max-width: 575px) {
+      .dept-display-panel {
+        padding: 22px 18px;
+      }
+      .dept-tab-card {
+        padding: 14px 16px;
+      }
+      .dept-icon-box {
+        width: 40px;
+        height: 40px;
+        font-size: 1.15rem;
+      }
+      .dept-card-title {
+        font-size: 0.88rem;
+      }
+      .dept-card-sub {
+        font-size: 0.72rem;
+      }
+    }
+
+    /* Respect prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      .dept-ambient-orb {
+        animation: none !important;
+      }
+      .dept-pill-pulse {
+        animation: none !important;
+      }
+      .dept-cap-item {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .dept-display-panel.panel-switching-out,
+      .dept-display-panel.panel-switching-in {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .dept-tab-card {
+        transition: none !important;
+      }
+    }
+
+    /* -------------------------------------------------------------
+       7. Patient Portal Banner Section
+    ------------------------------------------------------------- */
+    .portal-cta-banner {
+      background: linear-gradient(135deg, #1E40AF 0%, #0D9488 100%);
+      border-radius: 24px;
+      padding: 48px 40px;
+      color: #FFFFFF;
+      box-shadow: 0 16px 40px rgba(30, 64, 175, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* -------------------------------------------------------------
+       8. Footer
+    ------------------------------------------------------------- */
+    .carehub-footer {
+      background: #0B132B;
+      color: #CBD5E1;
+      padding: 4.5rem 0 2rem;
+      font-size: 0.92rem;
+    }
+
+    .carehub-footer .text-muted {
+      color: #94A3B8 !important;
+    }
+
+    .carehub-footer p,
+    .carehub-footer .footer-subtext {
+      color: #CBD5E1;
+      font-size: 0.88rem;
+      line-height: 1.75;
+    }
+
+    .footer-brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.3px;
+    }
+
+    .footer-heading {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 1.25rem;
+    }
+
+    .footer-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.65rem;
+    }
+
+    .footer-links a {
+      color: #CBD5E1;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+
+    .footer-links a:hover {
+      color: #38BDF8;
+      transform: translateX(3px);
+    }
+
+    .footer-social-link {
+      color: #94A3B8;
+      font-size: 1.15rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .footer-social-link:hover {
+      color: #FFFFFF;
+      background: #2563EB;
+      border-color: #2563EB;
+      transform: translateY(-2px);
+    }
+
+    .footer-bottom-bar {
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      padding-top: 1.8rem;
+      margin-top: 3.5rem;
+      font-size: 0.84rem;
+      color: #94A3B8;
+    }
+
+    .footer-bottom-bar a {
+      color: #94A3B8;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-bottom-bar a:hover {
+      color: #FFFFFF;
+    }
+
+    /* Scroll Reveal */
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .scroll-reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+
+      .scroll-reveal,
+      .hero-slide,
+      .card-3d,
+      .btn-patient-portal,
+      .btn-cta-primary {
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        animation: none !important;
+      }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 991.98px) {
+      .hero-main-title {
+        font-size: 2.5rem;
+      }
+
+      .hero-photo-stage {
+        height: 380px;
+      }
+
+      .stage-3d-wrapper {
+        min-height: 420px;
+      }
+
+      .nav-btn-3d.prev {
+        left: 0px;
+      }
+
+      .nav-btn-3d.next {
+        right: 0px;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .hero-main-title {
+        font-size: 2.1rem;
+      }
+
+      .cta-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .hero-stats-strip {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .portal-cta-banner {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       1. Navigation Header
+  ============================================================ -->
+  <nav class="navbar navbar-expand-lg carehub-navbar sticky-top">
+    <div class="container px-lg-4">
+
+      <!-- Brand Logo -->
+      <a href="/" class="brand-box text-decoration-none d-flex align-items-center">
+        <img src="{{ url_for('static', filename='images/carehub_logo.png') }}" alt="CareHub" style="height: 42px; width: auto; max-width: 170px; object-fit: contain;">
+      </a>
+
+      <!-- Mobile Toggle -->
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+        data-bs-target="#carehubNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Center Links & Right Actions -->
+      <div class="collapse navbar-collapse" id="carehubNav">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link nav-link-item active" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-item" href="#about">About Us</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-item" href="#doctors">Doctors</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-item" href="#services">Services</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-item" href="#departments">Departments</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-item" href="#contact">Contact</a>
+          </li>
+        </ul>
+
+        <!-- Right Side: Phone & Single Unified Patient Portal Button -->
+        <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+          <a href="tel:+919876543210" class="nav-contact-pill d-none d-xl-inline-flex">
+            <div class="nav-contact-icon">
+              <i class="bi bi-telephone-fill"></i>
+            </div>
+            <span>+91 98765 43210</span>
+          </a>
+
+          {% if current_user.is_authenticated %}
+          <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('auth.dashboard') }}" class="btn-patient-portal" title="Go to Dashboard">
+              <i class="bi bi-person-circle"></i>
+              <span>{{ current_user.name.split(' ')[0] }} ({{ current_user.role.name if current_user.role else 'User' }})</span>
+            </a>
+            <a href="{{ url_for('auth.logout') }}"
+              class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 fw-semibold" title="Sign Out">
+              <i class="bi bi-box-arrow-right"></i>
+            </a>
+          </div>
+          {% else %}
+          <!-- ONE Unified Primary Button: Patient Portal -->
+          <button type="button" class="btn-patient-portal" data-bs-toggle="modal"
+            data-bs-target="#patientPortalAuthModal">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Login Portal</span>
+            <i class="bi bi-arrow-right portal-arrow ms-1" style="font-size: 0.85rem;"></i>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       2. Hero Section - Premium Modern Healthcare Aesthetic
+  ============================================================ -->
+  <section class="hero-wrapper">
+    <!-- Subtle Background Canvas (Grid + Soft Organic Shape + Micro Accents) -->
+    <div class="hero-bg-canvas" aria-hidden="true">
+      <div class="hero-grid-subtle"></div>
+      <div class="hero-shape-backdrop"></div>
+      <div class="hero-glow-soft"></div>
+      <div class="hero-decor-dot-matrix d-none d-md-block"></div>
+      
+      <!-- Subtle Decorative Elements Matching Visual Target -->
+      <span class="hero-decor-dot dot-teal" style="top: 28%; left: 3.2%;"></span>
+      <span class="hero-decor-dot dot-blue" style="bottom: 16%; left: 4%;"></span>
+      
+      <!-- Subtle Medical Plus Signs -->
+      <span class="hero-decor-plus" style="top: 14%; right: 48%;"><i class="bi bi-plus-lg"></i></span>
+      <span class="hero-decor-plus plus-sm" style="top: 48%; left: 47%;"><i class="bi bi-plus-lg"></i></span>
+      <span class="hero-decor-plus" style="top: 34%; right: 2%;"><i class="bi bi-plus-lg"></i></span>
+      <span class="hero-decor-plus plus-blue" style="bottom: 18%; right: 2.5%;"><i class="bi bi-plus-lg"></i></span>
+    </div>
+
+    <div class="container px-lg-4">
+      <div class="row align-items-center g-4 g-xl-5">
+
+        <!-- Left Hero Text Column -->
+        <div class="col-lg-6 col-xl-6 hero-anim-1">
+          <h1 class="hero-main-title">
+            Better Care Today,<br>
+            <span class="text-gradient-accent">Healthier Tomorrow</span>
+          </h1>
+
+          <p class="hero-lead-text hero-anim-2">
+            Experience connected, compassionate and advanced healthcare — bringing doctors, diagnostics and digital health together in one seamless platform for you and your family.
+          </p>
+
+          <!-- Primary & Secondary CTA Buttons -->
+          <div class="cta-group hero-anim-3">
+            <a href="#doctors" class="btn-cta-primary">
+              <i class="bi bi-calendar2-check-fill"></i>
+              <span>Book an Appointment</span>
+              <i class="bi bi-arrow-right cta-arrow"></i>
+            </a>
+
+            <a href="#services" class="btn-cta-secondary">
+              <span>Explore Services</span>
+              <i class="bi bi-arrow-right cta-arrow"></i>
+            </a>
+          </div>
+
+          <!-- Feature Strip under CTA: 3 Compact Non-Numeric Value Propositions -->
+          <div class="hero-feature-strip">
+            <div class="hero-feature-item">
+              <div class="hero-feature-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 3v6a7.5 7.5 0 0 0 15 0V3"></path>
+                  <line x1="12" y1="16.5" x2="12" y2="21"></line>
+                  <circle cx="12" cy="21" r="1.5"></circle>
+                </svg>
+              </div>
+              <div>
+                <div class="hero-feature-title">Expert<br class="d-none d-sm-inline"> Doctors</div>
+                <p class="hero-feature-desc">Qualified specialists across departments</p>
+              </div>
+            </div>
+
+            <div class="hero-feature-item">
+              <div class="hero-feature-icon">
+                <i class="bi bi-calendar2-check-fill"></i>
+              </div>
+              <div>
+                <div class="hero-feature-title">Easy<br class="d-none d-sm-inline"> Appointments</div>
+                <p class="hero-feature-desc">Book care at your convenience</p>
+              </div>
+            </div>
+
+            <div class="hero-feature-item">
+              <div class="hero-feature-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <polyline points="9 12 11 14 15 10"></polyline>
+                </svg>
+              </div>
+              <div>
+                <div class="hero-feature-title">Secure<br class="d-none d-sm-inline"> &amp; Private</div>
+                <p class="hero-feature-desc">Your health data always protected</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Hero Photo Slideshow Column (Smaller, Compact & Sleek) -->
+        <div class="col-lg-6 col-xl-6 hero-anim-4">
+          <div class="hero-photo-stage-wrapper">
+            
+            <!-- Top-Right Floating Card: Trusted Healthcare -->
+            <div class="hero-floating-card hero-float-top-right">
+              <div class="hero-float-icon-wrap">
+                <i class="bi bi-people-fill"></i>
+              </div>
+              <div>
+                <div class="hero-float-title">Trusted Healthcare</div>
+                <div class="hero-float-sub">for Your Family</div>
+              </div>
+              <i class="bi bi-chevron-right hero-float-arrow"></i>
+            </div>
+
+            <!-- Lower-Left Floating Card: Care at Every Step -->
+            <div class="hero-floating-card hero-float-lower-left">
+              <div class="hero-float-icon-wrap icon-heart">
+                <i class="bi bi-heart-fill"></i>
+              </div>
+              <div>
+                <div class="hero-float-title">Care at Every Step</div>
+                <div class="hero-float-sub">of Your Journey</div>
+              </div>
+              <i class="bi bi-chevron-right hero-float-arrow"></i>
+            </div>
+
+            <!-- Carousel Photo Stage -->
+            <div class="hero-photo-stage" id="heroPhotoStage">
+              <!-- Slideshow Images: Ultrasound doctor & patient matching the reference target -->
+              <img src="{{ url_for('static', filename='images/hero_ultrasound.jpg') }}" alt="Modern Clinical Ultrasound Imaging"
+                class="hero-slide active">
+              <img src="{{ url_for('static', filename='images/hero_doctor_patient.jpg') }}"
+                alt="Doctor Patient Consultation" class="hero-slide">
+              <img src="{{ url_for('static', filename='images/hero_doctor_child.jpg') }}" alt="Pediatric Healthcare Care"
+                class="hero-slide">
+              <img src="{{ url_for('static', filename='images/hero_doctor_elderly.jpg') }}" alt="Senior Geriatric Care"
+                class="hero-slide">
+              <img src="{{ url_for('static', filename='images/hero_laboratory.jpg') }}"
+                alt="Diagnostic Laboratory Testing" class="hero-slide">
+
+              <!-- Unified Carousel Navigation Controls (Arrows + Indicators) -->
+              <div class="hero-carousel-controls">
+                <button type="button" class="hero-nav-arrow" onclick="prevHeroSlide()" aria-label="Previous Slide">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="hero-dots-container" id="heroDots">
+                  <span class="hero-dot active" onclick="setHeroSlide(0)"></span>
+                  <span class="hero-dot" onclick="setHeroSlide(1)"></span>
+                  <span class="hero-dot" onclick="setHeroSlide(2)"></span>
+                  <span class="hero-dot" onclick="setHeroSlide(3)"></span>
+                  <span class="hero-dot" onclick="setHeroSlide(4)"></span>
+                </div>
+                <button type="button" class="hero-nav-arrow" onclick="nextHeroSlide()" aria-label="Next Slide">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3. Trust & Healthcare Introduction Section (Why Choose CareHub)
+  ============================================================ -->
+  <section class="trust-section scroll-reveal" id="about">
+    <!-- Subtle Background Canvas (Grid + Glow + Micro Accents) -->
+    <div class="trust-bg-canvas" aria-hidden="true">
+      <div class="trust-grid-subtle"></div>
+      <div class="trust-glow-soft"></div>
+      <span class="trust-decor-plus" style="top: 14%; left: 4%;"><i class="bi bi-plus-lg"></i></span>
+      <span class="trust-decor-plus plus-teal" style="bottom: 18%; right: 4%;"><i class="bi bi-plus-lg"></i></span>
+      <span class="trust-decor-dot dot-teal" style="top: 28%; right: 7%;"></span>
+      <span class="trust-decor-dot dot-blue" style="bottom: 14%; left: 3%;"></span>
+    </div>
+
+    <div class="container px-lg-4 position-relative" style="z-index: 2;">
+      <div class="row align-items-center g-4 g-xl-5">
+
+        <!-- Left Video with Depth Layers & Floating Card -->
+        <div class="col-lg-5 reveal-video">
+          <div class="trust-video-wrapper">
+            <!-- Organic shape backdrop behind video -->
+            <div class="trust-shape-backdrop" aria-hidden="true"></div>
+
+            <!-- Main Cinematic Video Card -->
+            <div class="trust-photo-box">
+              <video autoplay loop muted playsinline
+                poster="{{ url_for('static', filename='images/hero_doctor_elderly.jpg') }}">
+                <source src="{{ url_for('static', filename='videos/hero_video.mp4') }}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              
+              <!-- Subtle bottom gradient overlay for contrast -->
+              <div class="trust-video-overlay" aria-hidden="true"></div>
+
+              <!-- Small Understated Editorial Tag -->
+              <div class="trust-video-tag">
+                <span class="trust-tag-pulse"></span>
+                <span>The CareHub Experience</span>
+              </div>
+
+              <!-- Floating Information Card (Patient-Centered Value Proposition) -->
+              <div class="trust-pill-badge">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="trust-badge-icon-wrap">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                  </div>
+                  <div>
+                    <div class="trust-badge-title">Patient-Centered Care</div>
+                    <div class="trust-badge-sub">Every step, connected.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Value Propositions & Clinical Pillars -->
+        <div class="col-lg-7">
+          <div class="ps-lg-3">
+            
+            <!-- Section Label Pill -->
+            <div class="reveal-elem rev-d1 mb-3">
+              <div class="section-label-badge">
+                <span class="label-dot"></span>
+                <span>Why Choose CareHub</span>
+              </div>
+            </div>
+
+            <!-- Headline with Accent Highlight -->
+            <h2 class="trust-main-heading reveal-elem rev-d2">
+              Compassionate Healthcare<br>
+              Powered by <span class="text-gradient-accent">Clinical Precision</span>
+            </h2>
+
+            <!-- Supporting Description -->
+            <p class="trust-lead-desc reveal-elem rev-d3">
+              We unite dedicated medical specialists with advanced diagnostics and integrated digital health to deliver empathetic, personalized, and dignifying care for you and your family.
+            </p>
+
+            <!-- 4 Feature Value Cards in 2x2 Grid -->
+            <div class="row g-3">
+              
+              <!-- Feature 1: Patient-First Philosophy -->
+              <div class="col-sm-6 reveal-elem rev-d4">
+                <div class="trust-point-card">
+                  <div class="trust-point-icon" style="background: #EFF6FF; color: #1E40AF;">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                  </div>
+                  <div>
+                    <h6 class="trust-point-title">Patient-First Philosophy</h6>
+                    <p class="trust-point-desc">Empathetic doctor consultations tailored to your individual health journey.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Feature 2: Integrated Digital Health -->
+              <div class="col-sm-6 reveal-elem rev-d5">
+                <div class="trust-point-card">
+                  <div class="trust-point-icon" style="background: #CCFBF1; color: #0D9488;">
+                    <i class="bi bi-shield-check"></i>
+                  </div>
+                  <div>
+                    <h6 class="trust-point-title">Integrated Digital Health</h6>
+                    <p class="trust-point-desc">Encrypted medical records, digital QR prescriptions, and online lab reports.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Feature 3: Board-Certified Specialists -->
+              <div class="col-sm-6 reveal-elem rev-d6">
+                <div class="trust-point-card">
+                  <div class="trust-point-icon" style="background: #E0F2FE; color: #0284C7;">
+                    <i class="bi bi-person-badge-fill"></i>
+                  </div>
+                  <div>
+                    <h6 class="trust-point-title">Board-Certified Specialists</h6>
+                    <p class="trust-point-desc">Leading surgeons, physicians, and pediatric specialists under one roof.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Feature 4: 24/7 Rapid Emergency -->
+              <div class="col-sm-6 reveal-elem rev-d7">
+                <div class="trust-point-card">
+                  <div class="trust-point-icon" style="background: #FEF3C7; color: #D97706;">
+                    <i class="bi bi-truck-front-fill"></i>
+                  </div>
+                  <div>
+                    <h6 class="trust-point-title">24/7 Rapid Emergency</h6>
+                    <p class="trust-point-desc">Dedicated trauma resuscitation, ambulance dispatch, and critical care units.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       4. Doctors Section (Center-Focused 3D Carousel)
+  ============================================================ -->
+  <section class="doctors-section scroll-reveal" id="doctors">
+    <div class="container px-lg-4">
+      <div class="text-center max-w-700 mx-auto mb-4">
+        <span class="badge bg-primary-subtle text-primary px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2"
+          style="font-size: 0.75rem;">
+          Medical Faculty
+        </span>
+        <h2 class="fw-bold text-dark" style="font-size: 2.2rem; letter-spacing: -0.5px;">
+          Meet Your Dedicated Care Specialists
+        </h2>
+        <p class="text-muted" style="font-size: 1rem; max-width: 620px; margin: 0 auto;">
+          From your first OPD consultation to ongoing wellness care, our specialists tailor treatment to your unique
+          clinical profile.
+        </p>
+      </div>
+
+      <!-- 3D Carousel Stage -->
+      <div class="stage-3d-wrapper">
+        <button type="button" class="nav-btn-3d prev" onclick="rotate3DCarousel(-1)" title="Previous Doctor">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <div class="stage-3d" id="doctors3dStage">
+          <div class="text-center p-5 w-100 text-muted">
+            <div class="spinner-border text-primary me-2" role="status"></div> Loading Specialists...
+          </div>
+        </div>
+
+        <button type="button" class="nav-btn-3d next" onclick="rotate3DCarousel(1)" title="Next Doctor">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Indicator Dots -->
+      <div class="dots-3d-container" id="doctorsDots"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       5. Services Section (Editorial Mixed Layout)
+  ============================================================ -->
+  <section class="services-section scroll-reveal" id="services">
+    <div class="container px-lg-4">
+      <div class="text-center max-w-700 mx-auto mb-5">
+        <span class="badge bg-primary-subtle text-primary px-3 py-1.5 rounded-pill fw-bold text-uppercase mb-2"
+          style="font-size: 0.75rem;">
+          Clinical Excellence
+        </span>
+        <h2 class="fw-bold text-dark" style="font-size: 2.2rem; letter-spacing: -0.5px;">
+          Comprehensive Healthcare Services
+        </h2>
+        <p class="text-muted" style="font-size: 1rem; max-width: 640px; margin: 0 auto;">
+          From routine preventive screenings to complex surgical interventions, our departments operate under rigorous
+          clinical safety protocols.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Featured Large Service Card (Laboratory & Diagnostics) -->
+        <div class="col-lg-6">
+          <div class="service-card-featured">
+            <div>
+              <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3"
+                style="background: rgba(255,255,255,0.15); font-size: 0.75rem; font-weight: 700;">
+                <i class="bi bi-award-fill text-warning"></i> NABL ACCREDITED
+              </div>
+              <h3 class="fw-bold mb-2" style="font-size: 1.7rem;">Advanced Pathology & Diagnostics</h3>
+              <p class="opacity-90 mb-4" style="font-size: 0.95rem;">
+                State-of-the-art automated hematology, biochemistry, molecular testing, and ultrasound diagnostics with
+                instant patient portal report delivery.
+              </p>
+              <ul class="list-unstyled mb-4 small opacity-90">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-teal me-2" style="color: #5EEAD4;"></i> Routine
+                  & Specialized Blood Panels (CBC, LFT, KFT, Lipid Profile)</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-teal me-2" style="color: #5EEAD4;"></i> Digital
+                  Radiology & High-Resolution Ultrasound Imaging</li>
+                <li><i class="bi bi-check-circle-fill text-teal me-2" style="color: #5EEAD4;"></i> Same-Day Verified
+                  Results with Secure Downloadable PDFs</li>
+              </ul>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between pt-3 border-top"
+              style="border-color: rgba(255,255,255,0.15) !important;">
+              <span class="small opacity-75">Available 24/7 for Emergency Diagnostics</span>
+              <a href="#doctors" class="btn btn-sm btn-light rounded-pill px-3 py-1.5 fw-bold text-dark">
+                Book Test →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Supporting Service Cards in 2x2 Grid -->
+        <div class="col-lg-6">
+          <div class="row g-3">
+            <!-- Service 1: Cardiology -->
+            <div class="col-sm-6">
+              <div class="service-card-standard">
+                <div class="service-icon-wrap" style="background: #EFF6FF; color: #1E40AF;">
+                  <i class="bi bi-heart-pulse-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">Cardiology & Heart Care</h5>
+                <p class="text-muted small mb-0">Non-invasive cardiac evaluation, ECG, 2D Echo, and preventive
+                  hypertension management.</p>
+              </div>
+            </div>
+
+            <!-- Service 2: Pediatrics -->
+            <div class="col-sm-6">
+              <div class="service-card-standard">
+                <div class="service-icon-wrap" style="background: #ECFDF5; color: #059669;">
+                  <i class="bi bi-emoji-smile-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">Pediatrics & Neonatology</h5>
+                <p class="text-muted small mb-0">Comprehensive well-baby checkups, childhood immunization, and acute
+                  illness treatment.</p>
+              </div>
+            </div>
+
+            <!-- Service 3: Orthopedics -->
+            <div class="col-sm-6">
+              <div class="service-card-standard">
+                <div class="service-icon-wrap" style="background: #F0FDFA; color: #0D9488;">
+                  <i class="bi bi-person-walking"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">Orthopedics & Joint Care</h5>
+                <p class="text-muted small mb-0">Arthroscopy, fracture management, joint rehabilitation, and spinal
+                  wellness therapy.</p>
+              </div>
+            </div>
+
+            <!-- Service 4: Emergency -->
+            <div class="col-sm-6">
+              <div class="service-card-standard">
+                <div class="service-icon-wrap" style="background: #FFFBEB; color: #D97706;">
+                  <i class="bi bi-truck-front-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">24/7 Critical & Trauma Care</h5>
+                <p class="text-muted small mb-0">Rapid triage, resuscitation bays, dedicated ICU beds, and on-call
+                  trauma surgeons.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       6. Departments & Clinical Ecosystem (Interactive Selector)
+  ============================================================ -->
+  <section class="departments-section scroll-reveal" id="departments">
+    <!-- Ambient Floating Healthcare Glow Orbs -->
+    <div class="dept-ambient-orb dept-orb-left" aria-hidden="true"></div>
+    <div class="dept-ambient-orb dept-orb-right" aria-hidden="true"></div>
+    <div class="dept-grid-overlay" aria-hidden="true"></div>
+
+    <div class="container px-lg-4 position-relative" style="z-index: 2;">
+      <!-- Section Header -->
+      <div class="text-center max-w-700 mx-auto mb-5">
+        <div class="d-inline-flex align-items-center mb-3 reveal-elem rev-d1">
+          <div class="dept-section-badge">
+            <span class="dept-badge-dot"></span>
+            <span>Clinical Ecosystem</span>
+          </div>
+        </div>
+        <h2 class="dept-main-heading reveal-elem rev-d2">
+          Specialized Hospital <span class="dept-heading-accent">Departments</span>
+        </h2>
+        <p class="dept-lead-desc reveal-elem rev-d3">
+          Explore our seamlessly integrated hospital departments working in harmony to deliver compassionate patient care.
+        </p>
+      </div>
+
+      <div class="row g-4 align-items-stretch">
+        <!-- Left: Department Selector Tabs -->
+        <div class="col-lg-5 reveal-elem rev-d4">
+          <div class="dept-selector-wrapper" role="tablist" aria-label="Hospital Departments">
+            <!-- OPD Tab -->
+            <button type="button" class="dept-tab-card dept-tab-btn active" id="tab-opd" role="tab"
+              aria-selected="true" aria-controls="deptDisplayPanel" tabindex="0"
+              onclick="switchDept('opd', this)"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchDept('opd', this);}">
+              <div class="dept-active-indicator" aria-hidden="true"></div>
+              <div class="dept-icon-box dept-icon-opd">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div class="dept-card-text">
+                <div class="dept-card-title">Outpatient Consultations (OPD)</div>
+                <div class="dept-card-sub">Multi-specialty daily clinics</div>
+              </div>
+              <div class="dept-card-arrow" aria-hidden="true">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </button>
+
+            <!-- IPD Tab -->
+            <button type="button" class="dept-tab-card dept-tab-btn" id="tab-ipd" role="tab"
+              aria-selected="false" aria-controls="deptDisplayPanel" tabindex="0"
+              onclick="switchDept('ipd', this)"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchDept('ipd', this);}">
+              <div class="dept-active-indicator" aria-hidden="true"></div>
+              <div class="dept-icon-box dept-icon-ipd">
+                <i class="bi bi-hospital"></i>
+              </div>
+              <div class="dept-card-text">
+                <div class="dept-card-title">Inpatient &amp; Ward Care (IPD)</div>
+                <div class="dept-card-sub">General, ICU, &amp; Pediatric wards</div>
+              </div>
+              <div class="dept-card-arrow" aria-hidden="true">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </button>
+
+            <!-- Diagnostic Tab -->
+            <button type="button" class="dept-tab-card dept-tab-btn" id="tab-diag" role="tab"
+              aria-selected="false" aria-controls="deptDisplayPanel" tabindex="0"
+              onclick="switchDept('diag', this)"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchDept('diag', this);}">
+              <div class="dept-active-indicator" aria-hidden="true"></div>
+              <div class="dept-icon-box dept-icon-diag">
+                <i class="bi bi-clipboard2-pulse"></i>
+              </div>
+              <div class="dept-card-text">
+                <div class="dept-card-title">Diagnostic Pathology &amp; Imaging</div>
+                <div class="dept-card-sub">Automated lab testing &amp; scan reports</div>
+              </div>
+              <div class="dept-card-arrow" aria-hidden="true">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </button>
+
+            <!-- Pharmacy Tab -->
+            <button type="button" class="dept-tab-card dept-tab-btn" id="tab-pharm" role="tab"
+              aria-selected="false" aria-controls="deptDisplayPanel" tabindex="0"
+              onclick="switchDept('pharm', this)"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchDept('pharm', this);}">
+              <div class="dept-active-indicator" aria-hidden="true"></div>
+              <div class="dept-icon-box dept-icon-pharm">
+                <i class="bi bi-capsule"></i>
+              </div>
+              <div class="dept-card-text">
+                <div class="dept-card-title">Digital Pharmacy &amp; e-Rx</div>
+                <div class="dept-card-sub">QR verified drug dispensing</div>
+              </div>
+              <div class="dept-card-arrow" aria-hidden="true">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Dynamic Department Display Panel -->
+        <div class="col-lg-7 reveal-elem rev-d5">
+          <div class="dept-display-panel" id="deptDisplayPanel" role="tabpanel" aria-live="polite">
+            <!-- Rendered via JS switchDept() -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       7. Patient Portal Banner Section
+  ============================================================ -->
+  <section class="py-5" id="portal-cta">
+    <div class="container px-lg-4">
+      <div class="portal-cta-banner">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-8">
+            <div class="badge px-3 py-1 rounded-pill mb-2"
+              style="background: rgba(255,255,255,0.2); font-size: 0.75rem; font-weight: 700;">
+              <i class="bi bi-shield-check me-1"></i> SELF-SERVICE DIGITAL PASSPORT
+            </div>
+            <h2 class="fw-bold mb-2" style="font-size: 2rem;">Take Control of Your Health Journey</h2>
+            <p class="mb-0 opacity-90" style="font-size: 1.02rem; max-width: 600px;">
+              Access your digital prescriptions, diagnostic lab reports, appointment bookings, and complete clinical
+              timeline anytime, anywhere through the secure CareHub Patient Portal.
+            </p>
+          </div>
+          <div class="col-lg-4 text-lg-end">
+            <button type="button" class="btn btn-light btn-lg rounded-pill px-4 py-3 fw-bold shadow-sm"
+              data-bs-toggle="modal" data-bs-target="#patientPortalAuthModal"
+              style="color: #1E40AF; font-size: 0.98rem;">
+              <i class="bi bi-person-circle me-1"></i> Open Patient Portal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       8. Footer
+  ============================================================ -->
+  <footer class="carehub-footer" id="contact">
+    <div class="container px-lg-4">
+      <div class="row g-4">
+        <!-- Col 1: Brand & Bio -->
+        <div class="col-lg-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="bg-white rounded-3 p-1.5 d-inline-flex align-items-center justify-content-center shadow-sm" style="height: 42px; padding: 4px 10px;">
+              <img src="{{ url_for('static', filename='images/carehub_logo.png') }}" alt="CareHub" style="height: 30px; width: auto;">
+            </div>
+          </div>
+          <p class="footer-subtext mb-4">
+            CareHub Integrated Patient Care Management System provides world-class clinical excellence, ethical
+            medicine, and seamless patient experience across outpatient, inpatient, and diagnostic services.
+          </p>
+          <div class="d-flex gap-2">
+            <a href="#" class="footer-social-link" title="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="footer-social-link" title="Twitter"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="footer-social-link" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="footer-social-link" title="YouTube"><i class="bi bi-youtube"></i></a>
+          </div>
+        </div>
+
+        <!-- Col 2: Navigation Links -->
+        <div class="col-6 col-lg-2">
+          <div class="footer-heading">Quick Links</div>
+          <ul class="footer-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="#doctors">Our Specialists</a></li>
+            <li><a href="#services">Clinical Services</a></li>
+            <li><a href="#departments">Departments</a></li>
+            <li><a href="#about">About Hospital</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Specialties -->
+        <div class="col-6 col-lg-3">
+          <div class="footer-heading">Specialties</div>
+          <ul class="footer-links">
+            <li><a href="#doctors">Cardiology &amp; Heart Care</a></li>
+            <li><a href="#doctors">Neurology &amp; Brain Health</a></li>
+            <li><a href="#doctors">Orthopedics &amp; Joint Care</a></li>
+            <li><a href="#doctors">Pediatrics &amp; Neonatology</a></li>
+            <li><a href="#doctors">Radiology &amp; Ultrasound</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Contact & Emergency -->
+        <div class="col-lg-3">
+          <div class="footer-heading">24/7 Helpline</div>
+          <div class="mb-3">
+            <div class="text-white fw-bold fs-6"><i class="bi bi-telephone-fill text-danger me-2"></i>1800-CAREHUB</div>
+            <div style="color: #94A3B8; font-size: 0.82rem;">Toll-Free Emergency Dispatch</div>
+          </div>
+          <div class="mb-3">
+            <div class="text-white fw-bold fs-6"><i class="bi bi-envelope-fill text-primary me-2"></i>care@carehub.hospital</div>
+            <div style="color: #94A3B8; font-size: 0.82rem;">Patient Support &amp; Inquiries</div>
+          </div>
+          <div style="color: #CBD5E1; font-size: 0.84rem; line-height: 1.5;">
+            <i class="bi bi-geo-alt-fill text-info me-1"></i> Medical District, Central Healthcare Avenue, City Hospital Complex.
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="footer-bottom-bar d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          &copy; 2026 <strong class="text-white">CareHub Healthcare</strong>. Integrated Patient Care Management System. All rights reserved.
+        </div>
+        <div class="d-flex gap-3">
+          <a href="#" class="text-decoration-none">Privacy Policy</a>
+          <span>·</span>
+          <a href="#" class="text-decoration-none">Terms of Service</a>
+          <span>·</span>
+          <a href="#" class="text-decoration-none">Clinical Governance</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       9. Unified CareHub Login Portal Authentication Modal
+  ============================================================ -->
+  <div class="modal fade" id="patientPortalAuthModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header text-white border-0 py-3 px-4"
+          style="background: linear-gradient(135deg, #1E40AF, #0D9488) !important;">
+          <div class="d-flex align-items-center gap-2">
+            <div
+              style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+              <i class="bi bi-shield-lock-fill text-white fs-6"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-0" style="font-size: 1.15rem;">CareHub Access Portals</h5>
+              <div style="font-size: 0.72rem; opacity: 0.9; font-weight: 500;">Select your designated healthcare portal
+                below</div>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 p-md-5">
+          <div class="row g-4">
+
+            <!-- Patient Health Portal Card -->
+            <div class="col-md-6">
+              <div class="h-100 p-4 rounded-4 border d-flex flex-column justify-content-between"
+                style="background: #F8FAFC; border-color: #E2E8F0 !important;">
+                <div>
+                  <div class="d-flex align-items-center gap-2.5 mb-3">
+                    <div
+                      style="width: 42px; height: 42px; border-radius: 12px; background: #EFF6FF; color: #1E40AF; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                      <i class="bi bi-person-heart"></i>
+                    </div>
+                    <div>
+                      <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;">Patient Portal</h5>
+                      <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-0.5 rounded-pill"
+                        style="font-size: 0.68rem;">Self-Service</span>
+                    </div>
+                  </div>
+                  <p class="text-muted small mb-4" style="font-size: 0.85rem; line-height: 1.5;">
+                    Access your personal health records, view doctor prescriptions, download lab reports, and manage
+                    appointment bookings.
+                  </p>
+                </div>
+
+                <div class="d-grid gap-2">
+                  <a href="{{ url_for('auth.login', portal='patient') }}"
+                    class="btn btn-primary rounded-pill fw-bold py-2.5 shadow-sm"
+                    style="background-color: #1E40AF; font-size: 0.9rem;">
+                    <i class="bi bi-box-arrow-in-right me-1.5"></i> Sign In to Patient Portal
+                  </a>
+                  <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary rounded-pill fw-bold py-2.5"
+                    style="border-width: 1.5px; font-size: 0.9rem;">
+                    <i class="bi bi-person-plus-fill me-1.5"></i> Create Patient Account
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hospital Staff & Clinical Portal Card -->
+            <div class="col-md-6">
+              <div class="h-100 p-4 rounded-4 border d-flex flex-column justify-content-between"
+                style="background: #F8FAFC; border-color: #E2E8F0 !important;">
+                <div>
+                  <div class="d-flex align-items-center gap-2.5 mb-3">
+                    <div
+                      style="width: 42px; height: 42px; border-radius: 12px; background: #F0FDF4; color: #0D9488; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                      <i class="bi bi-hospital"></i>
+                    </div>
+                    <div>
+                      <h5 class="fw-bold text-dark mb-0" style="font-size: 1.05rem;">Staff &amp; Clinical Portal</h5>
+                      <span class="badge bg-success-subtle text-success fw-bold px-2 py-0.5 rounded-pill"
+                        style="font-size: 0.68rem;">Institutional</span>
+                    </div>
+                  </div>
+                  <p class="text-muted small mb-3" style="font-size: 0.85rem; line-height: 1.5;">
+                    Secure workspace for Physicians, Receptionists, Lab Technicians, and Hospital System Administrators.
+                  </p>
+                  <div class="p-2.5 bg-white rounded-3 border mb-4">
+                    <div class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                      Institutional Policy</div>
+                    <div class="text-secondary" style="font-size: 0.76rem;">Staff accounts are provisioned exclusively
+                      by Hospital Administrators. Self-registration is disabled.</div>
+                  </div>
+                </div>
+
+                <div class="d-grid">
+                  <a href="{{ url_for('auth.login', portal='staff') }}"
+                    class="btn btn-dark rounded-pill fw-bold py-2.5 shadow-sm"
+                    style="background-color: #0F172A; font-size: 0.9rem;">
+                    <i class="bi bi-shield-lock-fill me-1.5 text-warning"></i> Sign In to Staff Portal
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       10. Instant Doctor Booking Modal
+  ============================================================ -->
+  <div class="modal fade" id="quickBookingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header text-white border-0 py-3" style="background: #1E40AF !important;">
+          <h5 class="modal-title fw-bold"><i class="bi bi-calendar-check me-2"></i> Book Appointment</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-4">
+            <img id="quickDocImage" src="" alt="Doctor" class="rounded-circle object-fit-cover"
+              style="width: 60px; height: 60px; border: 2px solid #E2E8F0;">
+            <div>
+              <h5 class="fw-bold text-dark mb-0" id="quickDocName">Dr. Ananya Sharma</h5>
+              <div class="text-primary fw-semibold small" id="quickDocSpec">Cardiologist</div>
+              <div class="text-muted small" id="quickDocEdu">MBBS, MD</div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-5">
+              <label for="quickBookingDate" class="form-label fw-semibold small">Select Preferred Date *</label>
+              <input type="date" class="form-control rounded-3" id="quickBookingDate" onchange="fetchQuickSlots()">
+            </div>
+            <div class="col-md-7">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-semibold small mb-0">Available Time Slot *</label>
+                <div class="btn-group btn-group-sm" role="group" id="slotFilterGroup" style="transform: scale(0.9); transform-origin: right center;">
+                  <button type="button" class="btn btn-outline-primary active py-0 px-2 fw-semibold" id="btnFilterAvail" onclick="toggleQuickSlotFilter(true)">Available (<span id="quickAvailCount">0</span>)</button>
+                  <button type="button" class="btn btn-outline-secondary py-0 px-2 fw-semibold" id="btnFilterAll" onclick="toggleQuickSlotFilter(false)">All Slots</button>
+                </div>
+              </div>
+              <div id="quickSlotGrid" class="d-flex flex-wrap gap-2 pt-1" style="max-height: 220px; overflow-y: auto; padding-right: 4px; border: 1px solid #F1F5F9; border-radius: 8px; padding: 8px; background: #FAFBFD;">
+                <div class="text-muted small">Select a date to view available slots.</div>
+              </div>
+            </div>
+          </div>
+
+          <form id="quickBookingForm" onsubmit="submitQuickBooking(event)">
+            <input type="hidden" id="quickDocId" value="">
+            <input type="hidden" id="quickSelectedSlot" value="">
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="quickPatName" class="form-label fw-semibold small">Patient Full Name *</label>
+                <input type="text" class="form-control rounded-3" id="quickPatName"
+                  value="{% if current_user.is_authenticated %}{{ current_user.name }}{% endif %}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="quickPatEmail" class="form-label fw-semibold small">Email Address *</label>
+                <input type="email" class="form-control rounded-3" id="quickPatEmail"
+                  value="{% if current_user.is_authenticated %}{{ current_user.email }}{% endif %}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="quickPatMobile" class="form-label fw-semibold small">Mobile Number *</label>
+                <input type="tel" class="form-control rounded-3" id="quickPatMobile"
+                  value="{% if current_user.is_authenticated %}{{ current_user.mobile or '' }}{% endif %}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="quickReason" class="form-label fw-semibold small">Reason for Visit (Optional)</label>
+                <input type="text" class="form-control rounded-3" id="quickReason" placeholder="e.g. Routine checkup">
+              </div>
+            </div>
+
+            <div id="quickBookingAlert" class="alert d-none py-2 mb-3"></div>
+
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+              <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" id="quickConfirmBtn" class="btn btn-success rounded-pill px-4 fw-bold" disabled>
+                <i class="bi bi-check-lg me-1"></i> Confirm Appointment
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    /* ============================================================
+       Hero Slideshow with Smooth Crossfade & Indicators
+    ============================================================ */
+    let currentHeroIdx = 0;
+    let heroTimer = null;
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.hero-dot');
+
+    function setHeroSlide(idx) {
+      if (!slides.length) return;
+      slides[currentHeroIdx].classList.remove('active');
+      if (dots[currentHeroIdx]) dots[currentHeroIdx].classList.remove('active');
+
+      currentHeroIdx = idx;
+      slides[currentHeroIdx].classList.add('active');
+      if (dots[currentHeroIdx]) dots[currentHeroIdx].classList.add('active');
+
+      resetHeroTimer();
+    }
+
+    function nextHeroSlide() {
+      if (!slides.length) return;
+      const nextIdx = (currentHeroIdx + 1) % slides.length;
+      setHeroSlide(nextIdx);
+    }
+
+    function prevHeroSlide() {
+      if (!slides.length) return;
+      const prevIdx = (currentHeroIdx - 1 + slides.length) % slides.length;
+      setHeroSlide(prevIdx);
+    }
+
+    function resetHeroTimer() {
+      clearInterval(heroTimer);
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        heroTimer = setInterval(nextHeroSlide, 5500);
+      }
+    }
+
+    /* ============================================================
+       Subtle Hero Mouse Parallax (3-5px depth, smooth rAF)
+    ============================================================ */
+    function initHeroParallax() {
+      const hero = document.querySelector('.hero-wrapper');
+      const photoStage = document.getElementById('heroPhotoStage');
+      const shapeBackdrop = document.querySelector('.hero-shape-backdrop');
+      if (!hero || !photoStage || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.matchMedia('(hover: none)').matches || window.innerWidth < 992) return;
+
+      let mouseX = 0, mouseY = 0;
+      let curX = 0, curY = 0;
+      let rafId = null;
+
+      function onFrame() {
+        curX += (mouseX - curX) * 0.08;
+        curY += (mouseY - curY) * 0.08;
+
+        photoStage.style.transform = `translate3d(${curX * 4.5}px, ${curY * 4.5}px, 0)`;
+        if (shapeBackdrop) {
+          shapeBackdrop.style.transform = `translate3d(${curX * -9}px, ${curY * -9}px, 0)`;
+        }
+
+        if (Math.abs(mouseX - curX) > 0.001 || Math.abs(mouseY - curY) > 0.001) {
+          rafId = requestAnimationFrame(onFrame);
+        } else {
+          rafId = null;
+        }
+      }
+
+      hero.addEventListener('mousemove', (e) => {
+        const rect = hero.getBoundingClientRect();
+        mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+        mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        if (!rafId) {
+          rafId = requestAnimationFrame(onFrame);
+        }
+      }, { passive: true });
+
+      hero.addEventListener('mouseleave', () => {
+        mouseX = 0;
+        mouseY = 0;
+        if (!rafId) {
+          rafId = requestAnimationFrame(onFrame);
+        }
+      });
+    }
+
+    /* ============================================================
+       3D Doctors Carousel Implementation
+    ============================================================ */
+    let doctorData = [];
+    let current3dIndex = 0;
+    let autoRotateTimer = null;
+    let isUserInteracting = false;
+    let resumeAutoTimer = null;
+
+    function render3DCarousel() {
+      const stage = document.getElementById('doctors3dStage');
+      const dotsContainer = document.getElementById('doctorsDots');
+      if (!stage || doctorData.length === 0) return;
+
+      stage.innerHTML = '';
+      dotsContainer.innerHTML = '';
+
+      doctorData.forEach((doc, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card-3d';
+        card.setAttribute('data-index', idx);
+        card.onclick = (e) => {
+          if (idx !== current3dIndex) {
+            e.preventDefault();
+            goTo3dIndex(idx);
+          }
+        };
+
+        card.innerHTML = `
+          <div class="card-3d-img-box">
+            <img src="${doc.image_url}" alt="${doc.name}">
+          </div>
+          <div class="card-3d-name">${doc.name}</div>
+          <div class="card-3d-spec">${doc.specialization}</div>
+          <div class="text-muted small mb-2">${doc.education || 'MD, Senior Consultant'}</div>
+          <div class="card-3d-meta">
+            <span class="card-3d-exp">${doc.experience || '10+ Yrs Exp'}</span>
+            <button type="button" onclick="event.stopPropagation(); openQuickBooking(${doc.id})" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="background-color: #1E40AF;">
+              <i class="bi bi-calendar-plus me-1"></i> Book
+            </button>
+          </div>
+        `;
+
+        stage.appendChild(card);
+
+        const dot = document.createElement('div');
+        dot.className = `dot-3d ${idx === current3dIndex ? 'active' : ''}`;
+        dot.onclick = () => goTo3dIndex(idx);
+        dotsContainer.appendChild(dot);
+      });
+
+      update3dTransforms();
+      setupCursorTilt();
+      start3dAutoRotation();
+    }
+
+    function update3dTransforms() {
+      const cards = document.querySelectorAll('.card-3d');
+      const dots = document.querySelectorAll('.dot-3d');
+      const total = doctorData.length;
+      if (total === 0) return;
+
+      const isMobile = window.innerWidth < 768;
+      const isTablet = window.innerWidth < 1024;
+
+      cards.forEach((card, idx) => {
+        let diff = idx - current3dIndex;
+        if (diff > total / 2) diff -= total;
+        if (diff < -total / 2) diff += total;
+
+        card.classList.remove('is-center');
+
+        if (diff === 0) {
+          card.classList.add('is-center');
+          const scale = isMobile ? 1.04 : 1.1;
+          card.style.transform = `translateX(0px) translateZ(0px) scale(${scale})`;
+          card.style.opacity = '1';
+          card.style.zIndex = '30';
+          card.style.pointerEvents = 'auto';
+        } else if (diff === 1) {
+          const transX = isMobile ? 160 : (isTablet ? 220 : 270);
+          card.style.transform = `translateX(${transX}px) translateZ(-100px) scale(0.85)`;
+          card.style.opacity = '0.75';
+          card.style.zIndex = '15';
+          card.style.pointerEvents = 'auto';
+        } else if (diff === -1) {
+          const transX = isMobile ? -160 : (isTablet ? -220 : -270);
+          card.style.transform = `translateX(${transX}px) translateZ(-100px) scale(0.85)`;
+          card.style.opacity = '0.75';
+          card.style.zIndex = '15';
+          card.style.pointerEvents = 'auto';
+        } else if (diff === 2) {
+          const transX = isMobile ? 260 : 480;
+          card.style.transform = `translateX(${transX}px) translateZ(-200px) scale(0.7)`;
+          card.style.opacity = isMobile ? '0' : '0.35';
+          card.style.zIndex = '5';
+          card.style.pointerEvents = isMobile ? 'none' : 'auto';
+        } else if (diff === -2) {
+          const transX = isMobile ? -260 : -480;
+          card.style.transform = `translateX(${transX}px) translateZ(-200px) scale(0.7)`;
+          card.style.opacity = isMobile ? '0' : '0.35';
+          card.style.zIndex = '5';
+          card.style.pointerEvents = isMobile ? 'none' : 'auto';
+        } else {
+          card.style.transform = `translateX(${diff > 0 ? 600 : -600}px) scale(0.5)`;
+          card.style.opacity = '0';
+          card.style.zIndex = '0';
+          card.style.pointerEvents = 'none';
+        }
+      });
+
+      dots.forEach((dot, idx) => {
+        if (idx === current3dIndex) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    function rotate3DCarousel(dir) {
+      if (doctorData.length === 0) return;
+      current3dIndex = (current3dIndex + dir + doctorData.length) % doctorData.length;
+      update3dTransforms();
+      pauseAndResumeAutoRotation();
+    }
+
+    function goTo3dIndex(idx) {
+      if (doctorData.length === 0) return;
+      current3dIndex = idx;
+      update3dTransforms();
+      pauseAndResumeAutoRotation();
+    }
+
+    function setupCursorTilt() {
+      const stage = document.getElementById('doctors3dStage');
+      if (!stage) return;
+
+      stage.addEventListener('mousemove', (e) => {
+        const centerCard = stage.querySelector('.card-3d.is-center');
+        if (!centerCard) return;
+
+        const rect = centerCard.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left && e.clientX <= rect.right &&
+          e.clientY >= rect.top && e.clientY <= rect.bottom
+        ) {
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          const tiltY = Math.max(-5, Math.min(5, (e.clientX - centerX) / 20));
+          const tiltX = Math.max(-5, Math.min(5, (centerY - e.clientY) / 20));
+          const scale = window.innerWidth < 768 ? 1.04 : 1.1;
+          centerCard.style.transform = `translateX(0px) translateZ(20px) rotateY(${tiltY}deg) rotateX(${tiltX}deg) scale(${scale})`;
+        } else {
+          const scale = window.innerWidth < 768 ? 1.04 : 1.1;
+          centerCard.style.transform = `translateX(0px) translateZ(0px) scale(${scale})`;
+        }
+      });
+
+      stage.addEventListener('mouseleave', () => {
+        const centerCard = stage.querySelector('.card-3d.is-center');
+        if (centerCard) {
+          const scale = window.innerWidth < 768 ? 1.04 : 1.1;
+          centerCard.style.transform = `translateX(0px) translateZ(0px) scale(${scale})`;
+        }
+      });
+    }
+
+    function start3dAutoRotation() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      clearInterval(autoRotateTimer);
+      autoRotateTimer = setInterval(() => {
+        if (!isUserInteracting) {
+          rotate3DCarousel(1);
+        }
+      }, 5000);
+    }
+
+    function pauseAndResumeAutoRotation() {
+      isUserInteracting = true;
+      clearInterval(autoRotateTimer);
+      clearTimeout(resumeAutoTimer);
+      resumeAutoTimer = setTimeout(() => {
+        isUserInteracting = false;
+        start3dAutoRotation();
+      }, 4000);
+    }
+
+    function loadDoctorsCarousel() {
+      fetch('/api/doctors')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.doctors && data.doctors.length > 0) {
+            doctorData = data.doctors;
+            render3DCarousel();
+          } else {
+            const stage = document.getElementById('doctors3dStage');
+            if (stage) stage.innerHTML = '<div class="p-4 text-muted">Specialist data currently offline.</div>';
+          }
+        })
+        .catch(err => {
+          const stage = document.getElementById('doctors3dStage');
+          if (stage) stage.innerHTML = '<div class="p-4 text-muted">Specialist data offline.</div>';
+        });
+    }
+
+    /* ============================================================
+       Interactive Departments Selector
+    ============================================================ */
+    const deptInfo = {
+      opd: {
+        title: 'Outpatient Care & Multi-Specialty Clinics',
+        desc: 'Our outpatient department hosts daily morning and evening consultations across 15+ subspecialties with zero-delay queue management.',
+        features: [
+          'Live OPD TV Queue Board & SMS Wait-Time Notifications',
+          'Comprehensive Vitals Baselines Recorded by Trained Triage Nurses',
+          'Integrated Instant Digital Prescription & Diagnostic Ordering'
+        ],
+        badge: '15+ SPECIALTIES DAILY'
+      },
+      ipd: {
+        title: 'Inpatient Wards & Critical Care (IPD)',
+        desc: 'Equipped with modern patient monitoring, dedicated Intensive Care Units (ICU), and specialized pediatric and maternity suites.',
+        features: [
+          'Real-Time Inpatient Bed Grid & Electronic Nursing Notes',
+          'Round-the-Clock Critical Care Specialists & Emergency Resuscitation',
+          'Transparent Itemized Billing with Daily Patient Statements'
+        ],
+        badge: '100+ BEDS CAPACITY'
+      },
+      diag: {
+        title: 'NABL Diagnostic Pathology & Radiology',
+        desc: 'Advanced automated analyzers providing verified clinical accuracy for haematology, biochemistry, and clinical imaging.',
+        features: [
+          'High-Resolution Digital Ultrasound & Multi-Slice CT Scanning',
+          'Standardized Biological Normal Ranges & Critical Value Alerting',
+          'Instant Encrypted PDF Upload to Patient Portal Timeline'
+        ],
+        badge: 'AUTOMATED LAB ANALYZERS'
+      },
+      pharm: {
+        title: 'Digital Pharmacy & Dispensing Registry',
+        desc: 'Pharmacy management integrated directly with doctor consultation e-prescriptions for accurate dosage and drug safety.',
+        features: [
+          'Standalone SVG Base64 QR Authenticated E-Prescriptions',
+          'Automated Drug Interaction & Known Allergy Verification',
+          'Direct Invoicing & Transparent Medicine Pricing'
+        ],
+        badge: 'QR AUTHENTICATED'
+      }
+    };
+
+    function switchDept(key, el) {
+      // Deactivate all department selector cards
+      document.querySelectorAll('.dept-tab-btn, .dept-tab-card').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+
+      // Activate targeted department card
+      let activeTab = el;
+      if (!activeTab && key) {
+        activeTab = document.getElementById(`tab-${key}`);
+      }
+      if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.setAttribute('aria-selected', 'true');
+      }
+
+      const d = deptInfo[key] || deptInfo.opd;
+      const panel = document.getElementById('deptDisplayPanel');
+      if (!panel) return;
+
+      const renderPanelHTML = (data) => {
+        panel.innerHTML = `
+          <div class="dept-panel-glow" aria-hidden="true"></div>
+          <div class="dept-watermark-bg" aria-hidden="true">
+            <svg width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M2 12h20"></path>
+              <circle cx="12" cy="12" r="9.5"></circle>
+            </svg>
+          </div>
+          <div class="dept-panel-inner">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+              <div class="dept-badge-pill">
+                <span class="dept-pill-pulse" aria-hidden="true"></span>
+                <span>${data.badge}</span>
+              </div>
+              <a href="{{ url_for('appointments.book_appointment') }}" class="btn-dept-action">
+                <span>Book Department Visit</span>
+                <i class="bi bi-arrow-right dept-action-arrow"></i>
+              </a>
+            </div>
+
+            <h3 class="dept-detail-title">${data.title}</h3>
+            <p class="dept-detail-desc">${data.desc}</p>
+
+            <div class="dept-capabilities-box">
+              <div class="dept-capabilities-header">
+                <div class="dept-cap-tag">
+                  <i class="bi bi-shield-check"></i>
+                  <span>Key Clinical Capabilities</span>
+                </div>
+              </div>
+              <div class="dept-capabilities-list">
+                ${data.features.map((f, idx) => `
+                  <div class="dept-cap-item" style="animation-delay: ${idx * 80 + 70}ms;">
+                    <div class="dept-cap-icon-wrap">
+                      <i class="bi bi-check2-circle"></i>
+                    </div>
+                    <span class="dept-cap-text">${f}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      };
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // If initial render or prefers-reduced-motion, render immediately without transition
+      if (prefersReduced || panel.innerHTML.trim() === '') {
+        renderPanelHTML(d);
+        return;
+      }
+
+      // Smooth exit transition: fade out and slide slightly right
+      panel.classList.add('panel-switching-out');
+
+      setTimeout(() => {
+        renderPanelHTML(d);
+        panel.classList.remove('panel-switching-out');
+        panel.classList.add('panel-switching-in');
+
+        setTimeout(() => {
+          panel.classList.remove('panel-switching-in');
+        }, 360);
+      }, 150);
+    }
+
+    /* ============================================================
+       Quick Booking Modal Script
+    ============================================================ */
+    let quickDoctorObj = null;
+    let selectedQuickSlotTime = null;
+    let cachedQuickSlots = [];
+    let showOnlyAvailableSlots = true;
+
+    function openQuickBooking(doctorId) {
+      fetch(`/api/doctors/${doctorId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.doctor) {
+            quickDoctorObj = data.doctor;
+            document.getElementById('quickDocId').value = doctorId;
+            document.getElementById('quickDocName').innerText = quickDoctorObj.name;
+            const docSubtitle = (quickDoctorObj.department ? quickDoctorObj.department + ' · ' : '') + (quickDoctorObj.specialization || '');
+            document.getElementById('quickDocSpec').innerText = docSubtitle;
+            document.getElementById('quickDocEdu').innerText = quickDoctorObj.education;
+            document.getElementById('quickDocImage').src = quickDoctorObj.image_url;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('quickBookingDate');
+            dateInput.value = todayStr;
+            dateInput.min = todayStr;
+
+            showOnlyAvailableSlots = true;
+            document.getElementById('btnFilterAvail').classList.add('active', 'btn-outline-primary');
+            document.getElementById('btnFilterAvail').classList.remove('btn-outline-secondary');
+            document.getElementById('btnFilterAll').classList.remove('active', 'btn-outline-primary');
+            document.getElementById('btnFilterAll').classList.add('btn-outline-secondary');
+
+            fetchQuickSlots();
+
+            const modal = new bootstrap.Modal(document.getElementById('quickBookingModal'));
+            modal.show();
+          }
+        });
+    }
+
+    function toggleQuickSlotFilter(onlyAvail) {
+      showOnlyAvailableSlots = onlyAvail;
+      const btnAvail = document.getElementById('btnFilterAvail');
+      const btnAll = document.getElementById('btnFilterAll');
+      if (onlyAvail) {
+        btnAvail.classList.add('active', 'btn-outline-primary');
+        btnAvail.classList.remove('btn-outline-secondary');
+        btnAll.classList.remove('active', 'btn-outline-primary');
+        btnAll.classList.add('btn-outline-secondary');
+      } else {
+        btnAll.classList.add('active', 'btn-outline-primary');
+        btnAll.classList.remove('btn-outline-secondary');
+        btnAvail.classList.remove('active', 'btn-outline-primary');
+        btnAvail.classList.add('btn-outline-secondary');
+      }
+      renderQuickSlotsList();
+    }
+
+    function fetchQuickSlots() {
+      const docId = document.getElementById('quickDocId').value;
+      const dateVal = document.getElementById('quickBookingDate').value;
+      const grid = document.getElementById('quickSlotGrid');
+      grid.innerHTML = '<div class="text-muted small p-2">Loading slots...</div>';
+      document.getElementById('quickConfirmBtn').disabled = true;
+      selectedQuickSlotTime = null;
+
+      if (!docId || !dateVal) return;
+
+      fetch(`/api/doctors/${docId}/availability?date=${dateVal}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.is_holiday) {
+            grid.innerHTML = `<div class="alert alert-warning py-1 px-2 small w-100 mb-0">Holiday: ${data.holiday_reason}</div>`;
+            document.getElementById('quickAvailCount').innerText = '0';
+            cachedQuickSlots = [];
+            return;
+          }
+          cachedQuickSlots = data.slots || [];
+          const availCount = cachedQuickSlots.filter(s => s.is_available).length;
+          document.getElementById('quickAvailCount').innerText = availCount;
+          renderQuickSlotsList();
+        });
+    }
+
+    function renderQuickSlotsList() {
+      const grid = document.getElementById('quickSlotGrid');
+      grid.innerHTML = '';
+
+      if (!cachedQuickSlots || cachedQuickSlots.length === 0) {
+        grid.innerHTML = '<div class="text-muted small p-2">No available slots on this day.</div>';
+        return;
+      }
+
+      const slotsToRender = showOnlyAvailableSlots 
+        ? cachedQuickSlots.filter(s => s.is_available) 
+        : cachedQuickSlots;
+
+      if (slotsToRender.length === 0) {
+        if (showOnlyAvailableSlots) {
+          grid.innerHTML = `<div class="text-muted small p-2 w-100">
+            No remaining slots available today. 
+            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="toggleQuickSlotFilter(false)">View all slots</button> or choose another date.
+          </div>`;
+        } else {
+          grid.innerHTML = '<div class="text-muted small p-2">No slots configured for this date.</div>';
+        }
+        return;
+      }
+
+      slotsToRender.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSelected = selectedQuickSlotTime === slot.time_24h;
+        btn.className = `btn btn-sm ${slot.is_available ? (isSelected ? 'btn-primary active text-white' : 'btn-outline-primary') : 'btn-light text-muted border-0 opacity-50'} rounded-pill px-2.5 py-1 small fw-semibold`;
+        btn.innerText = slot.time_12h;
+        if (!slot.is_available) {
+          btn.disabled = true;
+          btn.title = slot.reason || 'Slot not available';
+        } else {
+          btn.onclick = () => {
+            document.querySelectorAll('#quickSlotGrid .btn').forEach(b => b.classList.remove('btn-primary', 'active', 'text-white'));
+            btn.classList.add('btn-primary', 'active', 'text-white');
+            selectedQuickSlotTime = slot.time_24h;
+            document.getElementById('quickConfirmBtn').disabled = false;
+          };
+        }
+        grid.appendChild(btn);
+      });
+    }
+
+    function submitQuickBooking(event) {
+      event.preventDefault();
+      const docId = document.getElementById('quickDocId').value;
+      const alertBox = document.getElementById('quickBookingAlert');
+      alertBox.classList.add('d-none');
+
+      if (!selectedQuickSlotTime) {
+        alertBox.className = 'alert alert-danger py-2 mb-3';
+        alertBox.innerText = 'Please select a slot time.';
+        alertBox.classList.remove('d-none');
+        return;
+      }
+
+      const payload = {
+        appointment_date: document.getElementById('quickBookingDate').value,
+        slot_time: selectedQuickSlotTime,
+        patient_name: document.getElementById('quickPatName').value,
+        patient_email: document.getElementById('quickPatEmail').value,
+        patient_mobile: document.getElementById('quickPatMobile').value,
+        reason: document.getElementById('quickReason').value
+      };
+
+      fetch(`/api/doctors/${docId}/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            alertBox.className = 'alert alert-danger py-2 mb-3';
+            alertBox.innerText = data.message || 'Booking failed.';
+            alertBox.classList.remove('d-none');
+          } else {
+            alertBox.className = 'alert alert-success py-2 mb-3';
+            alertBox.innerText = `🎉 Appointment ${data.appointment_code} booked successfully for ${data.appointment_date} at ${data.slot_time}!`;
+            alertBox.classList.remove('d-none');
+            document.getElementById('quickConfirmBtn').disabled = true;
+            fetchQuickSlots();
+          }
+        });
+    }
+
+    /* ============================================================
+       DOM Initializer & Intersection Observer
+    ============================================================ */
+    document.addEventListener('DOMContentLoaded', function () {
+      resetHeroTimer();
+      initHeroParallax();
+      loadDoctorsCarousel();
+      switchDept('opd');
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+          }
+        });
+      }, { threshold: 0.12 });
+
+      document.querySelectorAll('.scroll-reveal').forEach(el => {
+        observer.observe(el);
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      update3dTransforms();
+    });
+  </script>
+
+  <!-- CareHub Public AI Appointment Assistant -->
+  {% include 'components/carehub_public_ai.html' %}
+</body>
+
+</html>

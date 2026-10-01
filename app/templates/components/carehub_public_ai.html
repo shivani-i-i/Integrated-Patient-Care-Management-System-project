@@ -1,0 +1,76 @@
+<!-- CareHub Public AI Appointment Assistant Component — Maya (Booking Concierge) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/carehub-public-ai.css') }}">
+
+<!-- Floating Circular Launcher (Bottom-Right, 56px) -->
+<button type="button" 
+        class="carehub-public-ai-launcher" 
+        id="carehubPublicAiLauncher" 
+        aria-label="Open Maya — CareHub Booking Concierge" 
+        title="Open Maya — CareHub Booking Concierge"
+        aria-expanded="false"
+        aria-controls="carehubPublicAiWindow">
+  <span class="carehub-ai-badge-ping"></span>
+  <i class="bi bi-chat-dots-fill carehub-ai-icon-open"></i>
+  <i class="bi bi-x-lg carehub-ai-icon-close"></i>
+</button>
+
+<!-- Floating Chat Window -->
+<aside class="carehub-public-ai-window" id="carehubPublicAiWindow" aria-label="Maya CareHub Booking Concierge Window" role="dialog">
+  <!-- Header -->
+  <header class="carehub-public-ai-header">
+    <div class="carehub-public-ai-header-info">
+      <div class="carehub-public-ai-avatar">
+        <i class="bi bi-person-check-fill"></i>
+      </div>
+      <div>
+        <h4 class="carehub-public-ai-title">Maya <span style="font-weight: 500; opacity: 0.85; font-size: 0.78rem;">· Booking Concierge</span></h4>
+        <div class="carehub-public-ai-subtitle">
+          <span class="carehub-public-ai-status-dot"></span>
+          <span>Online · CareHub Booking Concierge</span>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="carehub-public-ai-close-btn" id="carehubPublicAiClose" aria-label="Close Assistant">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </header>
+
+  <!-- Quick Action Chips -->
+  <div class="carehub-public-ai-chips" id="carehubPublicAiChips">
+    <button type="button" class="carehub-ai-chip" data-query="Yes, I'm already a CareHub patient">
+      <i class="bi bi-check-circle-fill text-success me-1"></i> Already a Patient
+    </button>
+    <button type="button" class="carehub-ai-chip" data-query="No, I'm new to CareHub">
+      <i class="bi bi-person-plus-fill text-info me-1"></i> New to CareHub
+    </button>
+    <button type="button" class="carehub-ai-chip" data-query="I want to book an appointment">
+      <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+    </button>
+    <button type="button" class="carehub-ai-chip" data-query="What clinical departments are available?">
+      <i class="bi bi-hospital me-1"></i> Departments
+    </button>
+  </div>
+
+  <!-- Message Body -->
+  <main class="carehub-public-ai-messages" id="carehubPublicAiMessages" aria-live="polite">
+    <!-- Messages appended dynamically via carehub-public-ai.js -->
+  </main>
+
+  <!-- Input Form -->
+  <footer class="carehub-public-ai-input-bar">
+    <input type="text" 
+           class="carehub-public-ai-input" 
+           id="carehubPublicAiInput" 
+           placeholder="Type a message or select an option..." 
+           aria-label="Type appointment request"
+           autocomplete="off">
+    <button type="button" 
+           class="carehub-public-ai-send-btn" 
+           id="carehubPublicAiSend" 
+           aria-label="Send message">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </footer>
+</aside>
+
+<script src="{{ url_for('static', filename='js/carehub-public-ai.js') }}"></script>
